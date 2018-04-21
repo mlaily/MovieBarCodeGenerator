@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Form1.cs">
+    <Compile Include="FfmpegWrapper.cs" />
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
