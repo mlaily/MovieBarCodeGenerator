@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2026
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieBarCodeGenerator", "MovieBarCodeGenerator\MovieBarCodeGenerator.csproj", "{6AA1E6CC-41CB-4399-805E-449BA0825289}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6AA1E6CC-41CB-4399-805E-449BA0825289}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AA1E6CC-41CB-4399-805E-449BA0825289}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AA1E6CC-41CB-4399-805E-449BA0825289}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AA1E6CC-41CB-4399-805E-449BA0825289}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5CB3BDCA-005D-4FA5-A920-9E64BF568297}
+	EndGlobalSection
+EndGlobal
