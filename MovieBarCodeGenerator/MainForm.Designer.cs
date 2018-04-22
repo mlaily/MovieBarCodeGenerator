@@ -46,7 +46,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.barWidthTextBox = new System.Windows.Forms.TextBox();
-            this.autoCorrectBarParametersCheckBox = new System.Windows.Forms.CheckBox();
+            this.keepBarcodeValuesInSyncCheckBox = new System.Windows.Forms.CheckBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.aboutButton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
@@ -60,7 +60,7 @@
             this.inputPathTextBox.Location = new System.Drawing.Point(6, 37);
             this.inputPathTextBox.Name = "inputPathTextBox";
             this.inputPathTextBox.Size = new System.Drawing.Size(367, 20);
-            this.inputPathTextBox.TabIndex = 0;
+            this.inputPathTextBox.TabIndex = 1;
             // 
             // browseInputPathButton
             // 
@@ -68,9 +68,10 @@
             this.browseInputPathButton.Location = new System.Drawing.Point(379, 35);
             this.browseInputPathButton.Name = "browseInputPathButton";
             this.browseInputPathButton.Size = new System.Drawing.Size(75, 23);
-            this.browseInputPathButton.TabIndex = 1;
+            this.browseInputPathButton.TabIndex = 2;
             this.browseInputPathButton.Text = "Browse...";
             this.browseInputPathButton.UseVisualStyleBackColor = true;
+            this.browseInputPathButton.Click += new System.EventHandler(this.browseInputPathButton_Click);
             // 
             // generateButton
             // 
@@ -78,7 +79,7 @@
             this.generateButton.Location = new System.Drawing.Point(397, 240);
             this.generateButton.Name = "generateButton";
             this.generateButton.Size = new System.Drawing.Size(75, 23);
-            this.generateButton.TabIndex = 2;
+            this.generateButton.TabIndex = 13;
             this.generateButton.Text = "Generate!";
             this.generateButton.UseVisualStyleBackColor = true;
             this.generateButton.Click += new System.EventHandler(this.generateButton_Click);
@@ -105,7 +106,7 @@
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(460, 117);
-            this.groupBox1.TabIndex = 4;
+            this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Files";
             // 
@@ -125,7 +126,7 @@
             this.outputPathTextBox.Location = new System.Drawing.Point(6, 81);
             this.outputPathTextBox.Name = "outputPathTextBox";
             this.outputPathTextBox.Size = new System.Drawing.Size(367, 20);
-            this.outputPathTextBox.TabIndex = 4;
+            this.outputPathTextBox.TabIndex = 3;
             // 
             // browseOutputPathButton
             // 
@@ -133,15 +134,16 @@
             this.browseOutputPathButton.Location = new System.Drawing.Point(379, 79);
             this.browseOutputPathButton.Name = "browseOutputPathButton";
             this.browseOutputPathButton.Size = new System.Drawing.Size(75, 23);
-            this.browseOutputPathButton.TabIndex = 5;
+            this.browseOutputPathButton.TabIndex = 4;
             this.browseOutputPathButton.Text = "Browse...";
             this.browseOutputPathButton.UseVisualStyleBackColor = true;
+            this.browseOutputPathButton.Click += new System.EventHandler(this.browseOutputPathButton_Click);
             // 
             // groupBox2
             // 
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox2.Controls.Add(this.autoCorrectBarParametersCheckBox);
+            this.groupBox2.Controls.Add(this.keepBarcodeValuesInSyncCheckBox);
             this.groupBox2.Controls.Add(this.label6);
             this.groupBox2.Controls.Add(this.barWidthTextBox);
             this.groupBox2.Controls.Add(this.label5);
@@ -163,7 +165,7 @@
             this.imageWidthTextBox.Location = new System.Drawing.Point(6, 37);
             this.imageWidthTextBox.Name = "imageWidthTextBox";
             this.imageWidthTextBox.Size = new System.Drawing.Size(55, 20);
-            this.imageWidthTextBox.TabIndex = 0;
+            this.imageWidthTextBox.TabIndex = 6;
             this.imageWidthTextBox.Text = "1000";
             // 
             // label3
@@ -180,7 +182,7 @@
             this.imageHeightTextBox.Location = new System.Drawing.Point(79, 37);
             this.imageHeightTextBox.Name = "imageHeightTextBox";
             this.imageHeightTextBox.Size = new System.Drawing.Size(55, 20);
-            this.imageHeightTextBox.TabIndex = 10;
+            this.imageHeightTextBox.TabIndex = 7;
             // 
             // useInputHeightForOutputCheckBox
             // 
@@ -188,9 +190,10 @@
             this.useInputHeightForOutputCheckBox.Location = new System.Drawing.Point(6, 63);
             this.useInputHeightForOutputCheckBox.Name = "useInputHeightForOutputCheckBox";
             this.useInputHeightForOutputCheckBox.Size = new System.Drawing.Size(172, 17);
-            this.useInputHeightForOutputCheckBox.TabIndex = 12;
+            this.useInputHeightForOutputCheckBox.TabIndex = 8;
             this.useInputHeightForOutputCheckBox.Text = "Same height as the input video";
             this.useInputHeightForOutputCheckBox.UseVisualStyleBackColor = true;
+            this.useInputHeightForOutputCheckBox.CheckedChanged += new System.EventHandler(this.useInputHeightForOutputCheckBox_CheckedChanged);
             // 
             // label5
             // 
@@ -206,8 +209,9 @@
             this.barCountTextBox.Location = new System.Drawing.Point(220, 37);
             this.barCountTextBox.Name = "barCountTextBox";
             this.barCountTextBox.Size = new System.Drawing.Size(55, 20);
-            this.barCountTextBox.TabIndex = 13;
+            this.barCountTextBox.TabIndex = 9;
             this.barCountTextBox.Text = "1000";
+            this.barCountTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.barCountTextBox_KeyUp);
             // 
             // label4
             // 
@@ -232,20 +236,21 @@
             this.barWidthTextBox.Location = new System.Drawing.Point(288, 37);
             this.barWidthTextBox.Name = "barWidthTextBox";
             this.barWidthTextBox.Size = new System.Drawing.Size(55, 20);
-            this.barWidthTextBox.TabIndex = 15;
+            this.barWidthTextBox.TabIndex = 10;
             this.barWidthTextBox.Text = "1";
+            this.barWidthTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.barWidthTextBox_KeyUp);
             // 
-            // autoCorrectBarParametersCheckBox
+            // keepBarcodeValuesInSyncCheckBox
             // 
-            this.autoCorrectBarParametersCheckBox.AutoSize = true;
-            this.autoCorrectBarParametersCheckBox.Checked = true;
-            this.autoCorrectBarParametersCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autoCorrectBarParametersCheckBox.Location = new System.Drawing.Point(220, 63);
-            this.autoCorrectBarParametersCheckBox.Name = "autoCorrectBarParametersCheckBox";
-            this.autoCorrectBarParametersCheckBox.Size = new System.Drawing.Size(118, 17);
-            this.autoCorrectBarParametersCheckBox.TabIndex = 19;
-            this.autoCorrectBarParametersCheckBox.Text = "Auto correct values";
-            this.autoCorrectBarParametersCheckBox.UseVisualStyleBackColor = true;
+            this.keepBarcodeValuesInSyncCheckBox.AutoSize = true;
+            this.keepBarcodeValuesInSyncCheckBox.Checked = true;
+            this.keepBarcodeValuesInSyncCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.keepBarcodeValuesInSyncCheckBox.Location = new System.Drawing.Point(220, 63);
+            this.keepBarcodeValuesInSyncCheckBox.Name = "keepBarcodeValuesInSyncCheckBox";
+            this.keepBarcodeValuesInSyncCheckBox.Size = new System.Drawing.Size(121, 17);
+            this.keepBarcodeValuesInSyncCheckBox.TabIndex = 11;
+            this.keepBarcodeValuesInSyncCheckBox.Text = "Keep values in sync";
+            this.keepBarcodeValuesInSyncCheckBox.UseVisualStyleBackColor = true;
             // 
             // progressBar1
             // 
@@ -262,9 +267,10 @@
             this.aboutButton.Location = new System.Drawing.Point(12, 240);
             this.aboutButton.Name = "aboutButton";
             this.aboutButton.Size = new System.Drawing.Size(31, 23);
-            this.aboutButton.TabIndex = 7;
+            this.aboutButton.TabIndex = 12;
             this.aboutButton.Text = "?";
             this.aboutButton.UseVisualStyleBackColor = true;
+            this.aboutButton.Click += new System.EventHandler(this.aboutButton_Click);
             // 
             // MainForm
             // 
@@ -299,7 +305,7 @@
         private System.Windows.Forms.TextBox outputPathTextBox;
         private System.Windows.Forms.Button browseOutputPathButton;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.CheckBox autoCorrectBarParametersCheckBox;
+        private System.Windows.Forms.CheckBox keepBarcodeValuesInSyncCheckBox;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox barWidthTextBox;
         private System.Windows.Forms.Label label5;
