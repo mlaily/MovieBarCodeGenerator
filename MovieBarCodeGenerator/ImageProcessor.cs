@@ -33,7 +33,6 @@ namespace MovieBarCodeGenerator
         public int Width { get; set; } = 1000;
         public int? Height { get; set; } = null;
         public int BarWidth { get; set; } = 1;
-        public bool Smoothen { get; set; } = false;
     }
 
     public class ImageProcessor
@@ -83,18 +82,16 @@ namespace MovieBarCodeGenerator
 
             finalBitmapGraphics?.Dispose();
 
-            if (parameters.Smoothen && finalBitmap != null)
-            {
-                var onePixelHeight = GetResizedImage(finalBitmap, finalBitmap.Width, 1);
-                var smoothened = GetResizedImage(onePixelHeight, finalBitmap.Width, finalBitmap.Height);
-
-                onePixelHeight.Dispose();
-                finalBitmap.Dispose();
-
-                finalBitmap = smoothened;
-            }
-
             return finalBitmap;
+        }
+
+        public Bitmap GetSmoothedCopy(Bitmap inputImage)
+        {
+            using (var onePixelHeight = GetResizedImage(inputImage, inputImage.Width, 1))
+            {
+                var smoothed = GetResizedImage(onePixelHeight, inputImage.Width, inputImage.Height);
+                return smoothed;
+            }
         }
 
         // https://stackoverflow.com/a/24199315/755986

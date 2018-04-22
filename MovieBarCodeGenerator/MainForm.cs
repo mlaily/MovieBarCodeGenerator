@@ -88,10 +88,11 @@ namespace MovieBarCodeGenerator
 
             string inputPath;
             string outputPath;
+            string smoothedOutputPath;
             BarCodeParameters parameters;
             try
             {
-                (inputPath, outputPath, parameters) = GetValidatedParameters();
+                (inputPath, outputPath, smoothedOutputPath, parameters) = GetValidatedParameters();
             }
             catch (OperationCanceledException)
             {
@@ -108,7 +109,13 @@ namespace MovieBarCodeGenerator
             var progress = new PercentageProgressHandler(percentage =>
             {
                 var progressBarValue = Math.Min(100, (int)Math.Round(percentage * 100, MidpointRounding.AwayFromZero));
-                Invoke(new Action(() => progressBar1.Value = progressBarValue));
+                Invoke(new Action(() =>
+                {
+                    if (_cancellationTokenSource != null)
+                    {
+                        progressBar1.Value = progressBarValue;
+                    }
+                }));
             });
 
             _cancellationTokenSource = new CancellationTokenSource();
@@ -142,14 +149,13 @@ namespace MovieBarCodeGenerator
             catch (Exception ex)
             {
                 MessageBox.Show(this,
-                    $@"Sorry, something went wrong, and it probably won't resolve on its own.
+                    $@"Sorry, something went wrong.
 Here is all the info available at the time of the error (press Ctrl+C to copy it).
 
 Input: {inputPath}
 Output width: {parameters.Width}
 Output height: {parameters.Height}
 Bar width: {parameters.BarWidth}
-Smoothen: {parameters.Smoothen}
 Error: {ex}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -157,7 +163,7 @@ Error: {ex}",
             finally
             {
                 generateButton.Text = GenerateButtonText;
-                _cancellationTokenSource.Dispose();
+                _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
             }
 
@@ -171,36 +177,79 @@ Error: {ex}",
             {
                 MessageBox.Show(this, $" Unable to save the image: {ex}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+
+            if (smoothedOutputPath != null)
+            {
+                Bitmap smoothed;
+                try
+                {
+                    smoothed = _imageProcessor.GetSmoothedCopy(result);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $"An error occured while creating the smoothed version of the barcode. Error: {ex}",
+                   "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                try
+                {
+                    smoothed.Save(smoothedOutputPath);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, $" Unable to save the smoothed image: {ex}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
-        private (string InputPath, string OutputPath, BarCodeParameters Parameters) GetValidatedParameters()
+        private (string InputPath, string OutputPath, string SmoothedOutputPath, BarCodeParameters Parameters)
+            GetValidatedParameters()
         {
-            var inputPath = inputPathTextBox.Text.Trim(new [] { '"' });
+            var inputPath = inputPathTextBox.Text.Trim(new[] { '"' });
             if (!File.Exists(inputPath))
             {
                 throw new Exception("The input file does not exist.");
             }
 
             var outputPath = outputPathTextBox.Text.Trim(new[] { '"' });
-            if (string.IsNullOrWhiteSpace(outputPath) || outputPath.Any(x => Path.GetInvalidPathChars().Contains(x)))
-            {
-                throw new Exception("The output path is invalid.");
-            }
 
-            if (!Path.HasExtension(outputPath))
+            void ValidateOutputPath(ref string path)
             {
-                outputPath += ".png";
-            }
-
-            if (File.Exists(outputPath))
-            {
-                var promptResult = MessageBox.Show(
-                    $"The file '{outputPath}' already exists. Are you sure you want to overwrite it?",
-                    "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (promptResult != DialogResult.Yes)
+                if (string.IsNullOrWhiteSpace(path))
                 {
-                    throw new OperationCanceledException();
+                    path = "output.png";
                 }
+
+                if (!Path.HasExtension(path))
+                {
+                    path += ".png";
+                }
+
+                if (path.Any(x => Path.GetInvalidPathChars().Contains(x)))
+                {
+                    throw new Exception("The output path is invalid.");
+                }
+
+                if (File.Exists(path))
+                {
+                    var promptResult = MessageBox.Show(this,
+                        $"The file '{path}' already exists. Do you want to overwrite it?",
+                        "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (promptResult != DialogResult.Yes)
+                    {
+                        throw new OperationCanceledException();
+                    }
+                }
+            }
+
+            ValidateOutputPath(ref outputPath);
+
+            string smoothedOutputPath = null;
+            if (smoothCheckBox.Checked)
+            {
+                smoothedOutputPath = $"{Path.GetFileNameWithoutExtension(outputPath)}_smoothed{Path.GetExtension(outputPath)}";
+                ValidateOutputPath(ref smoothedOutputPath);
             }
 
             if (!int.TryParse(barWidthTextBox.Text, out var barWidth))
@@ -228,13 +277,12 @@ Error: {ex}",
 
             var parameters = new BarCodeParameters()
             {
-                Smoothen = smoothCheckBox.Checked,
                 BarWidth = barWidth,
                 Width = imageWidth,
                 Height = imageHeight
             };
 
-            return (inputPath, outputPath, parameters);
+            return (inputPath, outputPath, smoothedOutputPath, parameters);
         }
 
         private void browseInputPathButton_Click(object sender, EventArgs e)

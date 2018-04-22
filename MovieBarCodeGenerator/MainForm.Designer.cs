@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.inputPathTextBox = new System.Windows.Forms.TextBox();
             this.browseInputPathButton = new System.Windows.Forms.Button();
             this.generateButton = new System.Windows.Forms.Button();
@@ -50,6 +51,7 @@
             this.imageWidthTextBox = new System.Windows.Forms.TextBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.aboutButton = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -164,17 +166,19 @@
             // smoothCheckBox
             // 
             this.smoothCheckBox.AutoSize = true;
-            this.smoothCheckBox.Location = new System.Drawing.Point(342, 39);
+            this.smoothCheckBox.Location = new System.Drawing.Point(349, 29);
             this.smoothCheckBox.Name = "smoothCheckBox";
-            this.smoothCheckBox.Size = new System.Drawing.Size(85, 17);
+            this.smoothCheckBox.Size = new System.Drawing.Size(106, 30);
             this.smoothCheckBox.TabIndex = 11;
-            this.smoothCheckBox.Text = "Smooth bars";
+            this.smoothCheckBox.Text = "Also generate\r\na smooth version";
+            this.toolTip1.SetToolTip(this.smoothCheckBox, "A second image will be generated, with smoothed bars.\r\nThe file will be created n" +
+        "ext to the specified output path, and will have the \"_smoothed\" suffix.");
             this.smoothCheckBox.UseVisualStyleBackColor = true;
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(201, 63);
+            this.label7.Location = new System.Drawing.Point(190, 64);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(180, 13);
             this.label7.TabIndex = 17;
@@ -183,7 +187,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(269, 21);
+            this.label6.Location = new System.Drawing.Point(258, 21);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(54, 13);
             this.label6.TabIndex = 16;
@@ -191,7 +195,7 @@
             // 
             // barWidthTextBox
             // 
-            this.barWidthTextBox.Location = new System.Drawing.Point(269, 37);
+            this.barWidthTextBox.Location = new System.Drawing.Point(258, 37);
             this.barWidthTextBox.Name = "barWidthTextBox";
             this.barWidthTextBox.Size = new System.Drawing.Size(55, 20);
             this.barWidthTextBox.TabIndex = 10;
@@ -201,7 +205,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(201, 21);
+            this.label5.Location = new System.Drawing.Point(190, 21);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(56, 13);
             this.label5.TabIndex = 14;
@@ -209,7 +213,7 @@
             // 
             // barCountTextBox
             // 
-            this.barCountTextBox.Location = new System.Drawing.Point(201, 37);
+            this.barCountTextBox.Location = new System.Drawing.Point(190, 37);
             this.barCountTextBox.Name = "barCountTextBox";
             this.barCountTextBox.Size = new System.Drawing.Size(55, 20);
             this.barCountTextBox.TabIndex = 9;
@@ -281,6 +285,12 @@
             this.aboutButton.UseVisualStyleBackColor = true;
             this.aboutButton.Click += new System.EventHandler(this.aboutButton_Click);
             // 
+            // toolTip1
+            // 
+            this.toolTip1.AutoPopDelay = 5000;
+            this.toolTip1.InitialDelay = 100;
+            this.toolTip1.ReshowDelay = 100;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -327,6 +337,7 @@
         private System.Windows.Forms.Button aboutButton;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.CheckBox smoothCheckBox;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }
 
