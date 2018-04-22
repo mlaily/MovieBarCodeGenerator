@@ -175,13 +175,13 @@ Error: {ex}",
 
         private (string InputPath, string OutputPath, BarCodeParameters Parameters) GetValidatedParameters()
         {
-            var inputPath = inputPathTextBox.Text;
+            var inputPath = inputPathTextBox.Text.Trim(new [] { '"' });
             if (!File.Exists(inputPath))
             {
                 throw new Exception("The input file does not exist.");
             }
 
-            var outputPath = outputPathTextBox.Text;
+            var outputPath = outputPathTextBox.Text.Trim(new[] { '"' });
             if (string.IsNullOrWhiteSpace(outputPath) || outputPath.Any(x => Path.GetInvalidPathChars().Contains(x)))
             {
                 throw new Exception("The output path is invalid.");
