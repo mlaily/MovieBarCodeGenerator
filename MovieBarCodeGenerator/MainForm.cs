@@ -252,12 +252,12 @@ Error: {ex}",
                 ValidateOutputPath(ref smoothedOutputPath);
             }
 
-            if (!int.TryParse(barWidthTextBox.Text, out var barWidth))
+            if (!int.TryParse(barWidthTextBox.Text, out var barWidth) || barWidth <= 0)
             {
                 throw new Exception("Invalid bar width.");
             }
 
-            if (!int.TryParse(imageWidthTextBox.Text, out var imageWidth))
+            if (!int.TryParse(imageWidthTextBox.Text, out var imageWidth) || imageWidth <= 0)
             {
                 throw new Exception("Invalid output width.");
             }
@@ -265,7 +265,7 @@ Error: {ex}",
             int? imageHeight = null;
             if (!useInputHeightForOutputCheckBox.Checked)
             {
-                if (int.TryParse(imageHeightTextBox.Text, out var nonNullableImageHeight))
+                if (int.TryParse(imageHeightTextBox.Text, out var nonNullableImageHeight) && nonNullableImageHeight > 0)
                 {
                     imageHeight = nonNullableImageHeight;
                 }
