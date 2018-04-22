@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MovieBarCodeGenerator
@@ -21,41 +22,51 @@ namespace MovieBarCodeGenerator
 
         private Process StartFfmpegInstance(string args)
         {
-            var process = Process.Start(new ProcessStartInfo
+            try
             {
-                FileName = FfmpegExecutablePath,
-                Arguments = args,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            });
-            return process;
+                var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = FfmpegExecutablePath,
+                    Arguments = args,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                });
+                return process;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error while starting FFmpeg", ex);
+            }
         }
 
-        public TimeSpan GetMediaDuration(string inputPath)
+        public TimeSpan GetMediaDuration(string inputPath, CancellationToken cancellationToken)
         {
             var args = $"-i \"{inputPath}\"";
 
             var process = StartFfmpegInstance(args);
 
-            var output = process.StandardError.ReadToEnd();
+            using (cancellationToken.Register(() => process.Kill()))
+            {
+                var output = process.StandardError.ReadToEnd();
 
-            var match = Regex.Match(output, @"Duration: (.*?),");
-            if (match.Success)
-            {
-                var result = TimeSpan.Parse(match.Groups[1].Value);
-                return result;
-            }
-            else
-            {
-                throw new FormatException();
+                var match = Regex.Match(output, @"Duration: (.*?),");
+                if (match.Success)
+                {
+                    var result = TimeSpan.Parse(match.Groups[1].Value);
+                    return result;
+                }
+                else
+                {
+                    throw new FormatException();
+                }
             }
         }
 
-        public IEnumerable<Bitmap> GetImagesFromMedia(string inputPath, int frameCount)
+        public IEnumerable<Bitmap> GetImagesFromMedia(string inputPath, int frameCount, CancellationToken cancellationToken)
         {
-            var length = GetMediaDuration(inputPath);
+            var length = GetMediaDuration(inputPath, cancellationToken);
 
             var fps = frameCount / length.TotalSeconds;
 
@@ -64,7 +75,10 @@ namespace MovieBarCodeGenerator
 
             var process = StartFfmpegInstance(args);
 
-            return ReadBitmapStream(process.StandardOutput.BaseStream);
+            using (cancellationToken.Register(() => process.Kill()))
+            {
+                return ReadBitmapStream(process.StandardOutput.BaseStream);
+            }
         }
 
         private IEnumerable<Bitmap> ReadBitmapStream(Stream stdout)

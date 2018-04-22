@@ -37,16 +37,17 @@
             this.outputPathTextBox = new System.Windows.Forms.TextBox();
             this.browseOutputPathButton = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.imageWidthTextBox = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.imageHeightTextBox = new System.Windows.Forms.TextBox();
-            this.useInputHeightForOutputCheckBox = new System.Windows.Forms.CheckBox();
-            this.label5 = new System.Windows.Forms.Label();
-            this.barCountTextBox = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
+            this.smoothCheckBox = new System.Windows.Forms.CheckBox();
+            this.label7 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.barWidthTextBox = new System.Windows.Forms.TextBox();
-            this.keepBarcodeValuesInSyncCheckBox = new System.Windows.Forms.CheckBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.barCountTextBox = new System.Windows.Forms.TextBox();
+            this.useInputHeightForOutputCheckBox = new System.Windows.Forms.CheckBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.imageHeightTextBox = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.imageWidthTextBox = new System.Windows.Forms.TextBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.aboutButton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
@@ -80,7 +81,6 @@
             this.generateButton.Name = "generateButton";
             this.generateButton.Size = new System.Drawing.Size(75, 23);
             this.generateButton.TabIndex = 13;
-            this.generateButton.Text = "Generate!";
             this.generateButton.UseVisualStyleBackColor = true;
             this.generateButton.Click += new System.EventHandler(this.generateButton_Click);
             // 
@@ -143,7 +143,8 @@
             // 
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox2.Controls.Add(this.keepBarcodeValuesInSyncCheckBox);
+            this.groupBox2.Controls.Add(this.smoothCheckBox);
+            this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.label6);
             this.groupBox2.Controls.Add(this.barWidthTextBox);
             this.groupBox2.Controls.Add(this.label5);
@@ -160,29 +161,60 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Barcode parameters";
             // 
-            // imageWidthTextBox
+            // smoothCheckBox
             // 
-            this.imageWidthTextBox.Location = new System.Drawing.Point(6, 37);
-            this.imageWidthTextBox.Name = "imageWidthTextBox";
-            this.imageWidthTextBox.Size = new System.Drawing.Size(55, 20);
-            this.imageWidthTextBox.TabIndex = 6;
-            this.imageWidthTextBox.Text = "1000";
+            this.smoothCheckBox.AutoSize = true;
+            this.smoothCheckBox.Location = new System.Drawing.Point(342, 39);
+            this.smoothCheckBox.Name = "smoothCheckBox";
+            this.smoothCheckBox.Size = new System.Drawing.Size(85, 17);
+            this.smoothCheckBox.TabIndex = 11;
+            this.smoothCheckBox.Text = "Smooth bars";
+            this.smoothCheckBox.UseVisualStyleBackColor = true;
             // 
-            // label3
+            // label7
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 21);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(60, 13);
-            this.label3.TabIndex = 1;
-            this.label3.Text = "Image size:";
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(201, 63);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(180, 13);
+            this.label7.TabIndex = 17;
+            this.label7.Text = "Note: bar width will take precedence";
             // 
-            // imageHeightTextBox
+            // label6
             // 
-            this.imageHeightTextBox.Location = new System.Drawing.Point(79, 37);
-            this.imageHeightTextBox.Name = "imageHeightTextBox";
-            this.imageHeightTextBox.Size = new System.Drawing.Size(55, 20);
-            this.imageHeightTextBox.TabIndex = 7;
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(269, 21);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(54, 13);
+            this.label6.TabIndex = 16;
+            this.label6.Text = "Bar width:";
+            // 
+            // barWidthTextBox
+            // 
+            this.barWidthTextBox.Location = new System.Drawing.Point(269, 37);
+            this.barWidthTextBox.Name = "barWidthTextBox";
+            this.barWidthTextBox.Size = new System.Drawing.Size(55, 20);
+            this.barWidthTextBox.TabIndex = 10;
+            this.barWidthTextBox.Text = "1";
+            this.barWidthTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.barWidthTextBox_KeyUp);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(201, 21);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(56, 13);
+            this.label5.TabIndex = 14;
+            this.label5.Text = "Bar count:";
+            // 
+            // barCountTextBox
+            // 
+            this.barCountTextBox.Location = new System.Drawing.Point(201, 37);
+            this.barCountTextBox.Name = "barCountTextBox";
+            this.barCountTextBox.Size = new System.Drawing.Size(55, 20);
+            this.barCountTextBox.TabIndex = 9;
+            this.barCountTextBox.Text = "1000";
+            this.barCountTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.barCountTextBox_KeyUp);
             // 
             // useInputHeightForOutputCheckBox
             // 
@@ -195,24 +227,6 @@
             this.useInputHeightForOutputCheckBox.UseVisualStyleBackColor = true;
             this.useInputHeightForOutputCheckBox.CheckedChanged += new System.EventHandler(this.useInputHeightForOutputCheckBox_CheckedChanged);
             // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(220, 21);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(56, 13);
-            this.label5.TabIndex = 14;
-            this.label5.Text = "Bar count:";
-            // 
-            // barCountTextBox
-            // 
-            this.barCountTextBox.Location = new System.Drawing.Point(220, 37);
-            this.barCountTextBox.Name = "barCountTextBox";
-            this.barCountTextBox.Size = new System.Drawing.Size(55, 20);
-            this.barCountTextBox.TabIndex = 9;
-            this.barCountTextBox.Text = "1000";
-            this.barCountTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.barCountTextBox_KeyUp);
-            // 
             // label4
             // 
             this.label4.AutoSize = true;
@@ -222,35 +236,30 @@
             this.label4.TabIndex = 11;
             this.label4.Text = "x";
             // 
-            // label6
+            // imageHeightTextBox
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(288, 21);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(54, 13);
-            this.label6.TabIndex = 16;
-            this.label6.Text = "Bar width:";
+            this.imageHeightTextBox.Location = new System.Drawing.Point(79, 37);
+            this.imageHeightTextBox.Name = "imageHeightTextBox";
+            this.imageHeightTextBox.Size = new System.Drawing.Size(55, 20);
+            this.imageHeightTextBox.TabIndex = 7;
             // 
-            // barWidthTextBox
+            // label3
             // 
-            this.barWidthTextBox.Location = new System.Drawing.Point(288, 37);
-            this.barWidthTextBox.Name = "barWidthTextBox";
-            this.barWidthTextBox.Size = new System.Drawing.Size(55, 20);
-            this.barWidthTextBox.TabIndex = 10;
-            this.barWidthTextBox.Text = "1";
-            this.barWidthTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.barWidthTextBox_KeyUp);
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 21);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(60, 13);
+            this.label3.TabIndex = 1;
+            this.label3.Text = "Image size:";
             // 
-            // keepBarcodeValuesInSyncCheckBox
+            // imageWidthTextBox
             // 
-            this.keepBarcodeValuesInSyncCheckBox.AutoSize = true;
-            this.keepBarcodeValuesInSyncCheckBox.Checked = true;
-            this.keepBarcodeValuesInSyncCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.keepBarcodeValuesInSyncCheckBox.Location = new System.Drawing.Point(220, 63);
-            this.keepBarcodeValuesInSyncCheckBox.Name = "keepBarcodeValuesInSyncCheckBox";
-            this.keepBarcodeValuesInSyncCheckBox.Size = new System.Drawing.Size(121, 17);
-            this.keepBarcodeValuesInSyncCheckBox.TabIndex = 11;
-            this.keepBarcodeValuesInSyncCheckBox.Text = "Keep values in sync";
-            this.keepBarcodeValuesInSyncCheckBox.UseVisualStyleBackColor = true;
+            this.imageWidthTextBox.Location = new System.Drawing.Point(6, 37);
+            this.imageWidthTextBox.Name = "imageWidthTextBox";
+            this.imageWidthTextBox.Size = new System.Drawing.Size(55, 20);
+            this.imageWidthTextBox.TabIndex = 6;
+            this.imageWidthTextBox.Text = "1000";
+            this.imageWidthTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.imageWidthTextBox_KeyUp);
             // 
             // progressBar1
             // 
@@ -283,7 +292,7 @@
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.generateButton);
             this.MaximumSize = new System.Drawing.Size(100000000, 312);
-            this.MinimumSize = new System.Drawing.Size(400, 312);
+            this.MinimumSize = new System.Drawing.Size(500, 312);
             this.Name = "MainForm";
             this.Text = "Movie BarCode Generator";
             this.groupBox1.ResumeLayout(false);
@@ -305,7 +314,6 @@
         private System.Windows.Forms.TextBox outputPathTextBox;
         private System.Windows.Forms.Button browseOutputPathButton;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.CheckBox keepBarcodeValuesInSyncCheckBox;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox barWidthTextBox;
         private System.Windows.Forms.Label label5;
@@ -317,6 +325,8 @@
         private System.Windows.Forms.TextBox imageWidthTextBox;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Button aboutButton;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.CheckBox smoothCheckBox;
     }
 }
 
