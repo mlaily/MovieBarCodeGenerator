@@ -16,7 +16,11 @@ With the "Smooth bars" feature enabled:
 
 ## About the code
 
-This tool is based on [FFmpeg](http://ffmpeg.org/).
+This tool is mostly a wrapper around [FFmpeg](http://ffmpeg.org/).
+
+A copy of ffmpeg.exe must be placed next to the main executable for it to work.
+
+All the code in this repository is released under the GPL license. see [License.txt](License.txt) for more information.
 
 The code has been written relatively quickly (a few hours), but should be of acceptable quality.
 
