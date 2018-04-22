@@ -89,10 +89,7 @@ namespace MovieBarCodeGenerator
             var progress = new PercentageProgressHandler(percentage =>
             {
                 var progressBarValue = Math.Min(100, (int)Math.Round(percentage * 100, MidpointRounding.AwayFromZero));
-                Invoke(new Action(() =>
-                {
-                    progressBar1.Value = progressBarValue;
-                }));
+                Invoke(new Action(() => progressBar1.Value = progressBarValue));
             });
 
             _cancellationTokenSource = new CancellationTokenSource();
@@ -103,6 +100,16 @@ namespace MovieBarCodeGenerator
             try
             {
                 generateButton.Text = CancelButtonText;
+                generateButton.Enabled = false;
+                // Prevent the user from cancelling for 1sec (it might not be obvious the generation has started)
+                var dontCare = Task.Delay(1000).ContinueWith(t =>
+                {
+                    try
+                    {
+                        Invoke(new Action(() => generateButton.Enabled = true));
+                    }
+                    catch { }
+                });
 
                 await Task.Run(() =>
                 {
