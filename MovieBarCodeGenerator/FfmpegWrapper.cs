@@ -20,7 +20,7 @@ namespace MovieBarCodeGenerator
             FfmpegExecutablePath = ffmpegExecutablePath;
         }
 
-        private Process StartFfmpegInstance(string args)
+        private Process StartFfmpegInstance(string args, bool redirectError = false)
         {
             try
             {
@@ -28,8 +28,11 @@ namespace MovieBarCodeGenerator
                 {
                     FileName = FfmpegExecutablePath,
                     Arguments = args,
+                    // Warning: if a standard stread is redirected but is not read,
+                    // its buffer might fill up and block the whole process.
+                    // Only redirect a standard stream if you read it!
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true,
+                    RedirectStandardError = redirectError,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 });
@@ -45,11 +48,13 @@ namespace MovieBarCodeGenerator
         {
             var args = $"-i \"{inputPath}\"";
 
-            var process = StartFfmpegInstance(args);
+            var process = StartFfmpegInstance(args, redirectError: true);
 
             using (cancellationToken.Register(() => process.Kill()))
             {
                 var output = process.StandardError.ReadToEnd();
+
+                cancellationToken.ThrowIfCancellationRequested();
 
                 var match = Regex.Match(output, @"Duration: (.*?),");
                 if (match.Success)
@@ -75,10 +80,19 @@ namespace MovieBarCodeGenerator
 
             var process = StartFfmpegInstance(args);
 
-            using (cancellationToken.Register(() => process.Kill()))
+            IEnumerable<Bitmap> GetLazyStream()
             {
-                return ReadBitmapStream(process.StandardOutput.BaseStream);
+                using (cancellationToken.Register(() => process.Kill()))
+                {
+                    foreach (var item in ReadBitmapStream(process.StandardOutput.BaseStream))
+                    {
+                        yield return item;
+                    }
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
             }
+
+            return GetLazyStream();
         }
 
         private IEnumerable<Bitmap> ReadBitmapStream(Stream stdout)

@@ -61,6 +61,7 @@ namespace MovieBarCodeGenerator
                 _cancellationTokenSource.Cancel();
                 _cancellationTokenSource = null;
                 generateButton.Text = GenerateButtonText;
+                progressBar1.Value = progressBar1.Minimum;
                 return;
             }
 
