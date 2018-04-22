@@ -77,6 +77,7 @@ namespace MovieBarCodeGenerator
             if (_cancellationTokenSource != null)
             {
                 _cancellationTokenSource.Cancel();
+                _cancellationTokenSource.Dispose();
                 _cancellationTokenSource = null;
                 generateButton.Text = GenerateButtonText;
                 progressBar1.Value = progressBar1.Minimum;
@@ -156,6 +157,8 @@ Error: {ex}",
             finally
             {
                 generateButton.Text = GenerateButtonText;
+                _cancellationTokenSource.Dispose();
+                _cancellationTokenSource = null;
             }
 
             // Save the barcode:
