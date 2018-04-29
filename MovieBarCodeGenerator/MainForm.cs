@@ -105,7 +105,7 @@ namespace MovieBarCodeGenerator
             }
 
             // Register progression callback and ready cancellation source:
-
+           
             var progress = new PercentageProgressHandler(percentage =>
             {
                 var progressBarValue = Math.Min(100, (int)Math.Round(percentage * 100, MidpointRounding.AwayFromZero));
@@ -119,6 +119,7 @@ namespace MovieBarCodeGenerator
             });
 
             _cancellationTokenSource = new CancellationTokenSource();
+            var cancellationLocalRef = _cancellationTokenSource;
 
             // Actually create the barcode:
 
@@ -140,7 +141,7 @@ namespace MovieBarCodeGenerator
                 await Task.Run(() =>
                 {
                     result = _imageProcessor.CreateBarCode(inputPath, parameters, _ffmpegWrapper, _cancellationTokenSource.Token, progress);
-                });
+                }, _cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
             {
@@ -165,6 +166,11 @@ Error: {ex}",
                 generateButton.Text = GenerateButtonText;
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
+            }
+
+            if (cancellationLocalRef.IsCancellationRequested)
+            {
+                return;
             }
 
             // Save the barcode:
@@ -248,7 +254,8 @@ Error: {ex}",
             string smoothedOutputPath = null;
             if (smoothCheckBox.Checked)
             {
-                smoothedOutputPath = $"{Path.GetFileNameWithoutExtension(outputPath)}_smoothed{Path.GetExtension(outputPath)}";
+                var name = $"{Path.GetFileNameWithoutExtension(outputPath)}_smoothed{Path.GetExtension(outputPath)}";
+                smoothedOutputPath = Path.Combine(Path.GetDirectoryName(outputPath), name);
                 ValidateOutputPath(ref smoothedOutputPath);
             }
 
