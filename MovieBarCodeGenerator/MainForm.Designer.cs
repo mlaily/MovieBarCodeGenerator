@@ -52,6 +52,7 @@
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.aboutButton = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.logTextBox = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -291,17 +292,32 @@
             this.toolTip1.InitialDelay = 100;
             this.toolTip1.ReshowDelay = 100;
             // 
+            // logTextBox
+            // 
+            this.logTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.logTextBox.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.logTextBox.Location = new System.Drawing.Point(12, 269);
+            this.logTextBox.Multiline = true;
+            this.logTextBox.Name = "logTextBox";
+            this.logTextBox.ReadOnly = true;
+            this.logTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.logTextBox.Size = new System.Drawing.Size(460, 80);
+            this.logTextBox.TabIndex = 14;
+            this.logTextBox.WordWrap = false;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(484, 273);
+            this.ClientSize = new System.Drawing.Size(484, 361);
+            this.Controls.Add(this.logTextBox);
             this.Controls.Add(this.aboutButton);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.generateButton);
-            this.MaximumSize = new System.Drawing.Size(100000000, 312);
             this.MinimumSize = new System.Drawing.Size(500, 312);
             this.Name = "MainForm";
             this.Text = "Movie BarCode Generator";
@@ -310,6 +326,7 @@
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -338,6 +355,7 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.CheckBox smoothCheckBox;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.TextBox logTextBox;
     }
 }
 

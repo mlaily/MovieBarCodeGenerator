@@ -51,6 +51,8 @@ namespace MovieBarCodeGenerator
             Icon = Icon.ExtractAssociatedIcon(executingAssembly.Location);
             Text += $" - {executingAssembly.GetName().Version}";
 
+            AppendLog(Text);
+
             _openFileDialog = new OpenFileDialog()
             {
                 CheckFileExists = true,
@@ -100,12 +102,20 @@ namespace MovieBarCodeGenerator
             }
             catch (Exception ex)
             {
+                AppendLog("Error validating input parameters. " + ex.ToString());
                 MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
 
+            AppendLog($@"Barcode generation starting...
+Input: {inputPath}
+Output: {outputPath}
+Output width: {parameters.Width}
+Output height: {parameters.Height}
+Bar width: {parameters.BarWidth}");
+
             // Register progression callback and ready cancellation source:
-           
+
             var progress = new PercentageProgressHandler(percentage =>
             {
                 var progressBarValue = Math.Min(100, (int)Math.Round(percentage * 100, MidpointRounding.AwayFromZero));
@@ -140,25 +150,18 @@ namespace MovieBarCodeGenerator
 
                 await Task.Run(() =>
                 {
-                    result = _imageProcessor.CreateBarCode(inputPath, parameters, _ffmpegWrapper, _cancellationTokenSource.Token, progress);
+                    result = _imageProcessor.CreateBarCode(inputPath, parameters, _ffmpegWrapper, _cancellationTokenSource.Token, progress, AppendLog);
                 }, _cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
             {
+                AppendLog("Operation cancelled.");
                 return;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this,
-                    $@"Sorry, something went wrong.
-Here is all the info available at the time of the error (press Ctrl+C to copy it).
-
-Input: {inputPath}
-Output width: {parameters.Width}
-Output height: {parameters.Height}
-Bar width: {parameters.BarWidth}
-Error: {ex}",
-                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                AppendLog("Error: " + ex.ToString());
+                MessageBox.Show(this, "Sorry, something went wrong. See the log for more info.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             finally
@@ -170,10 +173,13 @@ Error: {ex}",
 
             if (cancellationLocalRef.IsCancellationRequested)
             {
+                AppendLog("Operation cancelled.");
                 return;
             }
 
             // Save the barcode:
+
+            AppendLog("Saving the image...");
 
             try
             {
@@ -181,7 +187,9 @@ Error: {ex}",
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, $" Unable to save the image: {ex}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var message = $" Unable to save the image: {ex}";
+                AppendLog(message);
+                MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             if (smoothedOutputPath != null)
@@ -193,7 +201,9 @@ Error: {ex}",
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, $"An error occured while creating the smoothed version of the barcode. Error: {ex}",
+                    var message = $"An error occured while creating the smoothed version of the barcode. Error: {ex}";
+                    AppendLog(message);
+                    MessageBox.Show(this, message,
                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
@@ -204,9 +214,13 @@ Error: {ex}",
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, $" Unable to save the smoothed image: {ex}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    var message = $"Unable to save the smoothed image: {ex}";
+                    AppendLog(message);
+                    MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+
+            AppendLog("Barcode generated successfully!");
         }
 
         private (string InputPath, string OutputPath, string SmoothedOutputPath, BarCodeParameters Parameters)
@@ -356,6 +370,22 @@ Error: {ex}",
         }
 
         private void aboutButton_Click(object sender, EventArgs e) => new AboutBox().ShowDialog();
+
+        private void AppendLog(string value)
+        {
+            if (value == null)
+            {
+                return;
+            }
+
+            if (logTextBox.InvokeRequired)
+            {
+                logTextBox.Invoke(new Action(() => AppendLog(value)));
+                return;
+            }
+
+            logTextBox.AppendText($"{DateTime.Now:u} - " + value + Environment.NewLine);
+        }
     }
 
     public class PercentageProgressHandler : IProgress<double>

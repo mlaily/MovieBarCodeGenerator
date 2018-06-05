@@ -62,15 +62,35 @@ namespace MovieBarCodeGenerator
             }
         }
 
-        public TimeSpan GetMediaDuration(string inputPath, CancellationToken cancellationToken)
+        private static void TryKill(Process process)
         {
+            try
+            {
+                process.Kill();
+            }
+            catch
+            {
+                // The call may fail if the process already exited, and we don't want to crash for that...
+            }
+        }
+
+        public TimeSpan GetMediaDuration(string inputPath, CancellationToken cancellationToken, Action<string> log = null)
+        {
+            log?.Invoke("Getting input duration from FFmpeg...");
+
             var args = $"-i \"{inputPath}\"";
 
             var process = StartFfmpegInstance(args, redirectError: true);
 
-            using (cancellationToken.Register(() => process.Kill()))
+            using (cancellationToken.Register(() => TryKill(process)))
             {
                 var output = process.StandardError.ReadToEnd();
+
+                foreach (var item in output.Split(new[] { '\n' }))
+                {
+                    // mimic the behaviour of ErrorDataReceived and BeginErrorReadLine:
+                    log?.Invoke(item);
+                }
 
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -87,20 +107,28 @@ namespace MovieBarCodeGenerator
             }
         }
 
-        public IEnumerable<Bitmap> GetImagesFromMedia(string inputPath, int frameCount, CancellationToken cancellationToken)
+        public IEnumerable<Bitmap> GetImagesFromMedia(string inputPath, int frameCount, CancellationToken cancellationToken, Action<string> log = null)
         {
-            var length = GetMediaDuration(inputPath, cancellationToken);
+            var length = GetMediaDuration(inputPath, cancellationToken, log);
+
+            log?.Invoke("Reading images from FFmpeg...");
 
             var fps = frameCount / length.TotalSeconds;
 
             // Output a raw stream of bitmap images taken at the specified frequency
             var args = $"-i \"{inputPath}\" -vf fps={fps} -c:v bmp -f rawvideo -an -";
 
-            var process = StartFfmpegInstance(args);
+            var process = StartFfmpegInstance(args, redirectError: log != null);
+
+            if (log != null)
+            {
+                process.ErrorDataReceived += (s, e) => log(e.Data);
+                process.BeginErrorReadLine();
+            }
 
             IEnumerable<Bitmap> GetLazyStream()
             {
-                using (cancellationToken.Register(() => process.Kill()))
+                using (cancellationToken.Register(() => TryKill(process)))
                 {
                     foreach (var item in ReadBitmapStream(process.StandardOutput.BaseStream, cancellationToken))
                     {

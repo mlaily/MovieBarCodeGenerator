@@ -42,7 +42,8 @@ namespace MovieBarCodeGenerator
             BarCodeParameters parameters,
             FfmpegWrapper ffmpeg,
             CancellationToken cancellationToken,
-            IProgress<double> progress = null)
+            IProgress<double> progress = null,
+            Action<string> log = null)
         {
             Bitmap finalBitmap = null;
             Graphics finalBitmapGraphics = null;
@@ -58,7 +59,7 @@ namespace MovieBarCodeGenerator
             }
 
             var barCount = (int)Math.Round((double)parameters.Width / parameters.BarWidth);
-            var source = ffmpeg.GetImagesFromMedia(inputPath, barCount, cancellationToken);
+            var source = ffmpeg.GetImagesFromMedia(inputPath, barCount, cancellationToken, log);
 
             int? finalBitmapHeight = null;
 
