@@ -85,7 +85,6 @@ namespace MovieBarCodeGenerator.CLI
                 arguments.UseInputHeight = true;
             }
 
-
             string rawInputWithoutWildCards = arguments.RawInput;
             string inputPattern = "*";
             if (arguments.RawInput.Contains('*') || arguments.RawInput.Contains('?'))
