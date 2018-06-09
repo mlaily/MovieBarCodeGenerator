@@ -40,6 +40,7 @@ namespace MovieBarCodeGenerator.CLI
         public void Process(string[] args)
         {
             var arguments = new RawArguments();
+            var allRawInputs = new List<string>();
 
             var options = new OptionSet();
 
@@ -48,16 +49,16 @@ namespace MovieBarCodeGenerator.CLI
                 x => ShowHelp(options));
 
             options.Add("in|input=",
-                @"The input can be either of the following:
+                @"Accepted inputs:
 - a file path
 - a directory path
 - a file pattern (simple '?' and '*' wildcards are accepted)
 - a directory path followed by a file pattern
-- a list of all the above, separated by the '|' character. (Note that the whole list needs to be put between quotes to avoid the shell from interpreting '|' characterd as pipes)",
-                x => arguments.RawInput = x);
+This parameter can be set multiple times.",
+                x => allRawInputs.Add(x));
 
             options.Add("out|output:",
-                "Output file or directory. Default: current directory.",
+                "Output file or directory. Default: current directory, same name as the input file.",
                 x => arguments.RawOutput = x);
 
             options.Add("x|overwrite",
@@ -91,7 +92,7 @@ namespace MovieBarCodeGenerator.CLI
                 arguments.UseInputHeight = true;
             }
 
-            var expandedInputFileList = CLIUtils.GetExpandedAndValidatedFilePaths(arguments.RawInput, arguments.Recursive).ToList();
+            var expandedInputFileList = CLIUtils.GetExpandedAndValidatedFilePaths(allRawInputs, arguments.Recursive).ToList();
 
             if (expandedInputFileList.Any())
             {

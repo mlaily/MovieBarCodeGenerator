@@ -19,31 +19,19 @@ namespace MovieBarCodeGenerator.CLI
         /// - a list of all the above separated by the '|' character
         /// </summary>
         /// <returns>A list of existing file path matching the input.</returns>
-        public static IEnumerable<string> GetExpandedAndValidatedFilePaths(string rawUserInput, bool recursive)
+        public static IEnumerable<string> GetExpandedAndValidatedFilePaths(IEnumerable<string> rawUserInputs, bool recursive)
         {
-            if (rawUserInput == null)
+            if (rawUserInputs == null)
             {
                 return Enumerable.Empty<string>();
             }
 
-            List<string> rawAllInputFiles;
-            if (rawUserInput.Contains("|"))
-            {
-                // Split paths with the '|' character only if it is not escaped.
-                // Might be useful one day on unix systems that allow this character in file names...
-                rawAllInputFiles = Regex.Split(rawUserInput, @"(?<!\\)\|").ToList();
-            }
-            else
-            {
-                rawAllInputFiles = new List<string> { rawUserInput };
-            }
-
             List<(string PathPartWithoutWildcards, string FilePattern)> allInputFiles
                 = new List<(string PathPartWithoutWildcards, string FilePattern)>();
-            // At this point, the input files list might still contain wildcards needing to be expanded.
+            // At this point, the input files list might contain wildcards needing to be expanded.
             // To do that, we either keep just the file path,
             // or, if the path contains a wildcard, we split the directory path and the file pattern:
-            foreach (var item in rawAllInputFiles)
+            foreach (var item in rawUserInputs)
             {
                 string rawInputWithoutWildCards = item;
                 string inputPattern = "*";
