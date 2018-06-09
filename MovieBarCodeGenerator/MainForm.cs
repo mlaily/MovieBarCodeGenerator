@@ -40,6 +40,7 @@ namespace MovieBarCodeGenerator
         private SaveFileDialog _saveFileDialog;
         private FfmpegWrapper _ffmpegWrapper;
         private ImageProcessor _imageProcessor;
+        private BarCodeParametersValidator _barCodeParametersValidator;
 
         private CancellationTokenSource _cancellationTokenSource;
 
@@ -69,6 +70,7 @@ namespace MovieBarCodeGenerator
 
             _ffmpegWrapper = new FfmpegWrapper("ffmpeg.exe");
             _imageProcessor = new ImageProcessor();
+            _barCodeParametersValidator = new BarCodeParametersValidator();
 
             useInputHeightForOutputCheckBox.Checked = true;
             generateButton.Text = GenerateButtonText;
@@ -88,13 +90,26 @@ namespace MovieBarCodeGenerator
 
             // Validate parameters:
 
-            string inputPath;
-            string outputPath;
-            string smoothedOutputPath;
-            BarCodeParameters parameters;
+            bool PromptOverwriteExistingOutputFile(string path)
+            {
+                var promptResult = MessageBox.Show(this,
+                     $"The file '{path}' already exists. Do you want to overwrite it?",
+                     "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                return promptResult == DialogResult.Yes;
+            }
+
+            CompleteBarCodeGenerationParameters parameters;
             try
             {
-                (inputPath, outputPath, smoothedOutputPath, parameters) = GetValidatedParameters();
+                parameters = _barCodeParametersValidator.GetValidatedParameters(
+                    rawInputPath: inputPathTextBox.Text,
+                    rawOutputPath: outputPathTextBox.Text,
+                    rawBarWidth: barWidthTextBox.Text,
+                    rawImageWidth: imageWidthTextBox.Text,
+                    rawImageHeight: imageHeightTextBox.Text,
+                    useInputHeightForOutput: useInputHeightForOutputCheckBox.Checked,
+                    generateSmoothVersion: smoothCheckBox.Checked,
+                    shouldOverwriteOutput: PromptOverwriteExistingOutputFile);
             }
             catch (OperationCanceledException)
             {
@@ -108,11 +123,11 @@ namespace MovieBarCodeGenerator
             }
 
             AppendLog($@"Barcode generation starting...
-Input: {inputPath}
-Output: {outputPath}
-Output width: {parameters.Width}
-Output height: {parameters.Height}
-Bar width: {parameters.BarWidth}");
+Input: {parameters.InputPath}
+Output: {parameters.OutputPath}
+Output width: {parameters.BarCode.Width}
+Output height: {parameters.BarCode.Height}
+Bar width: {parameters.BarCode.BarWidth}");
 
             // Register progression callback and ready cancellation source:
 
@@ -150,7 +165,13 @@ Bar width: {parameters.BarWidth}");
 
                 await Task.Run(() =>
                 {
-                    result = _imageProcessor.CreateBarCode(inputPath, parameters, _ffmpegWrapper, _cancellationTokenSource.Token, progress, AppendLog);
+                    result = _imageProcessor.CreateBarCode(
+                        parameters.InputPath,
+                        parameters.BarCode,
+                        _ffmpegWrapper,
+                        _cancellationTokenSource.Token,
+                        progress,
+                        AppendLog);
                 }, _cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
@@ -183,16 +204,16 @@ Bar width: {parameters.BarWidth}");
 
             try
             {
-                result.Save(outputPath);
+                result.Save(parameters.OutputPath);
             }
             catch (Exception ex)
             {
-                var message = $" Unable to save the image: {ex}";
+                var message = $"Unable to save the image: {ex}";
                 AppendLog(message);
                 MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            if (smoothedOutputPath != null)
+            if (parameters.GenerateSmoothedOutput)
             {
                 Bitmap smoothed;
                 try
@@ -210,7 +231,7 @@ Bar width: {parameters.BarWidth}");
 
                 try
                 {
-                    smoothed.Save(smoothedOutputPath);
+                    smoothed.Save(parameters.SmoothedOutputPath);
                 }
                 catch (Exception ex)
                 {
@@ -221,89 +242,6 @@ Bar width: {parameters.BarWidth}");
             }
 
             AppendLog("Barcode generated successfully!");
-        }
-
-        private (string InputPath, string OutputPath, string SmoothedOutputPath, BarCodeParameters Parameters)
-            GetValidatedParameters()
-        {
-            var inputPath = inputPathTextBox.Text.Trim(new[] { '"' });
-            if (!File.Exists(inputPath))
-            {
-                throw new Exception("The input file does not exist.");
-            }
-
-            var outputPath = outputPathTextBox.Text.Trim(new[] { '"' });
-
-            void ValidateOutputPath(ref string path)
-            {
-                if (string.IsNullOrWhiteSpace(path))
-                {
-                    path = "output.png";
-                }
-
-                if (!Path.HasExtension(path))
-                {
-                    path += ".png";
-                }
-
-                if (path.Any(x => Path.GetInvalidPathChars().Contains(x)))
-                {
-                    throw new Exception("The output path is invalid.");
-                }
-
-                if (File.Exists(path))
-                {
-                    var promptResult = MessageBox.Show(this,
-                        $"The file '{path}' already exists. Do you want to overwrite it?",
-                        "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    if (promptResult != DialogResult.Yes)
-                    {
-                        throw new OperationCanceledException();
-                    }
-                }
-            }
-
-            ValidateOutputPath(ref outputPath);
-
-            string smoothedOutputPath = null;
-            if (smoothCheckBox.Checked)
-            {
-                var name = $"{Path.GetFileNameWithoutExtension(outputPath)}_smoothed{Path.GetExtension(outputPath)}";
-                smoothedOutputPath = Path.Combine(Path.GetDirectoryName(outputPath), name);
-                ValidateOutputPath(ref smoothedOutputPath);
-            }
-
-            if (!int.TryParse(barWidthTextBox.Text, out var barWidth) || barWidth <= 0)
-            {
-                throw new Exception("Invalid bar width.");
-            }
-
-            if (!int.TryParse(imageWidthTextBox.Text, out var imageWidth) || imageWidth <= 0)
-            {
-                throw new Exception("Invalid output width.");
-            }
-
-            int? imageHeight = null;
-            if (!useInputHeightForOutputCheckBox.Checked)
-            {
-                if (int.TryParse(imageHeightTextBox.Text, out var nonNullableImageHeight) && nonNullableImageHeight > 0)
-                {
-                    imageHeight = nonNullableImageHeight;
-                }
-                else
-                {
-                    throw new Exception("Invalid output height.");
-                }
-            }
-
-            var parameters = new BarCodeParameters()
-            {
-                BarWidth = barWidth,
-                Width = imageWidth,
-                Height = imageHeight
-            };
-
-            return (inputPath, outputPath, smoothedOutputPath, parameters);
         }
 
         private void browseInputPathButton_Click(object sender, EventArgs e)
