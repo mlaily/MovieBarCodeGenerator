@@ -26,15 +26,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MovieBarCodeGenerator
+namespace MovieBarCodeGenerator.Core
 {
-    public class BarCodeParameters
-    {
-        public int Width { get; set; } = 1000;
-        public int? Height { get; set; } = null;
-        public int BarWidth { get; set; } = 1;
-    }
-
     public class ImageProcessor
     {
         public Bitmap CreateBarCode(

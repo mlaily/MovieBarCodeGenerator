@@ -16,6 +16,7 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using MovieBarCodeGenerator.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -29,7 +30,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace MovieBarCodeGenerator
+namespace MovieBarCodeGenerator.GUI
 {
     public partial class MainForm : Form
     {

@@ -1,4 +1,4 @@
-﻿namespace MovieBarCodeGenerator
+﻿namespace MovieBarCodeGenerator.GUI
 {
     partial class AboutBox
     {

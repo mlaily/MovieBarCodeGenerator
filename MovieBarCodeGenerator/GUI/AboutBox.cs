@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace MovieBarCodeGenerator
+namespace MovieBarCodeGenerator.GUI
 {
     partial class AboutBox : Form
     {
