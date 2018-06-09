@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,7 +48,12 @@ namespace MovieBarCodeGenerator.CLI
                 x => ShowHelp(options));
 
             options.Add("in|input=",
-                "Input file or directory. Required.",
+                @"The input can be either of the following:
+- a file path
+- a directory path
+- a file pattern (simple '?' and '*' wildcards are accepted)
+- a directory path followed by a file pattern
+- a list of all the above, separated by the '|' character. (Note that the whole list needs to be put between quotes to avoid the shell from interpreting '|' characterd as pipes)",
                 x => arguments.RawInput = x);
 
             options.Add("out|output:",
@@ -85,34 +91,19 @@ namespace MovieBarCodeGenerator.CLI
                 arguments.UseInputHeight = true;
             }
 
-            string rawInputWithoutWildCards = arguments.RawInput;
-            string inputPattern = "*";
-            if (arguments.RawInput.Contains('*') || arguments.RawInput.Contains('?'))
-            {
-                rawInputWithoutWildCards = Path.GetDirectoryName(arguments.RawInput);
-                if (rawInputWithoutWildCards == "") // the input is a simple file pattern
-                {
-                    rawInputWithoutWildCards = ".";
-                }
-                inputPattern = Path.GetFileName(arguments.RawInput);
-            }
+            var expandedInputFileList = CLIUtils.GetExpandedAndValidatedFilePaths(arguments.RawInput, arguments.Recursive).ToList();
 
-            if (Directory.Exists(rawInputWithoutWildCards))
+            if (expandedInputFileList.Any())
             {
-                var searchOption = arguments.Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-                foreach (var file in Directory.EnumerateFiles(rawInputWithoutWildCards, inputPattern, searchOption))
+                foreach (var file in expandedInputFileList)
                 {
                     arguments.RawInput = file; // FIXME: copy instead of changing in place...
                     DealWithOneInputFile(arguments);
                 }
             }
-            else if (File.Exists(rawInputWithoutWildCards))
-            {
-                DealWithOneInputFile(arguments);
-            }
             else
             {
-                Console.WriteLine("Input does not exist.");
+                Console.WriteLine("No input.");
             }
 
             Console.WriteLine($"Exiting...");

@@ -53,6 +53,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CLI\CLIUtils.cs" />
     <Compile Include="Core\BarCodeParameters.cs" />
     <Compile Include="GUI\AboutBox.cs">
       <SubType>Form</SubType>
