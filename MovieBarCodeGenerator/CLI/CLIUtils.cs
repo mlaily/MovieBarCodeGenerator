@@ -10,6 +10,11 @@ namespace MovieBarCodeGenerator.CLI
 {
     public static class CLIUtils
     {
+        private class WildCardInput
+        {
+            public string PathPartWithoutWildcards { get; set; }
+            public string FilePattern { get; set; }
+        }
         /// <summary>
         /// the accepted input can be:
         /// - a simple file path
@@ -26,8 +31,8 @@ namespace MovieBarCodeGenerator.CLI
                 return Enumerable.Empty<string>();
             }
 
-            List<(string PathPartWithoutWildcards, string FilePattern)> allInputFiles
-                = new List<(string PathPartWithoutWildcards, string FilePattern)>();
+            List<WildCardInput> allInputFiles
+                = new List<WildCardInput>();
             // At this point, the input files list might contain wildcards needing to be expanded.
             // To do that, we either keep just the file path,
             // or, if the path contains a wildcard, we split the directory path and the file pattern:
@@ -44,7 +49,7 @@ namespace MovieBarCodeGenerator.CLI
                     }
                     inputPattern = Path.GetFileName(item);
                 }
-                allInputFiles.Add((rawInputWithoutWildCards, inputPattern));
+                allInputFiles.Add(new WildCardInput { PathPartWithoutWildcards = rawInputWithoutWildCards, FilePattern = inputPattern });
             }
 
             IEnumerable<string> LazyEnumeration()
