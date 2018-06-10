@@ -59,12 +59,15 @@
             // 
             // inputPathTextBox
             // 
+            this.inputPathTextBox.AllowDrop = true;
             this.inputPathTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.inputPathTextBox.Location = new System.Drawing.Point(6, 37);
             this.inputPathTextBox.Name = "inputPathTextBox";
             this.inputPathTextBox.Size = new System.Drawing.Size(367, 20);
             this.inputPathTextBox.TabIndex = 1;
+            this.inputPathTextBox.DragDrop += new System.Windows.Forms.DragEventHandler(this.TextBox_DragDrop);
+            this.inputPathTextBox.DragOver += new System.Windows.Forms.DragEventHandler(this.TextBox_DragOver);
             // 
             // browseInputPathButton
             // 
@@ -124,12 +127,15 @@
             // 
             // outputPathTextBox
             // 
+            this.outputPathTextBox.AllowDrop = true;
             this.outputPathTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.outputPathTextBox.Location = new System.Drawing.Point(6, 81);
             this.outputPathTextBox.Name = "outputPathTextBox";
             this.outputPathTextBox.Size = new System.Drawing.Size(367, 20);
             this.outputPathTextBox.TabIndex = 3;
+            this.outputPathTextBox.DragDrop += new System.Windows.Forms.DragEventHandler(this.TextBox_DragDrop);
+            this.outputPathTextBox.DragOver += new System.Windows.Forms.DragEventHandler(this.TextBox_DragOver);
             // 
             // browseOutputPathButton
             // 

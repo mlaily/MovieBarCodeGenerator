@@ -325,6 +325,34 @@ Bar width: {parameters.BarCode.BarWidth}");
 
             logTextBox.AppendText($"{DateTime.Now:u} - " + value + Environment.NewLine);
         }
+
+        private void TextBox_DragDrop(object sender, DragEventArgs e)
+        {
+            if (sender is TextBox target)
+            {
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    var paths = (string[])e.Data.GetData(DataFormats.FileDrop);
+                    var path = paths.FirstOrDefault();
+                    if (path != null)
+                    {
+                        target.Text = path;
+                    }
+                }
+                else if (e.Data.GetDataPresent(DataFormats.Text))
+                {
+                    target.Text = (string)e.Data.GetData(DataFormats.Text);
+                }
+            }
+        }
+
+        private void TextBox_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.Text))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+        }
     }
 
     public class PercentageProgressHandler : IProgress<double>
