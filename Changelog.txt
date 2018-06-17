@@ -1,3 +1,7 @@
+Version 1.4, 2018-06-17
+------------------------
+- [fixed] "Unable to save the image: System.NullReferenceException" errors happening on systems where the default decimal separator is not a dot. (the fps parameter was not formatted properly)
+
 Version 1.3, 2018-06-10
 ------------------------
 - [added] live log in the GUI showing the output of FFmpeg.
