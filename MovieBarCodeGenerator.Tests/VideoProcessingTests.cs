@@ -9,7 +9,7 @@ using MovieBarCodeGenerator.Core;
 namespace MovieBarCodeGenerator.Tests
 {
     [TestClass]
-    public class Tests
+    public class VideoProcessingTests
     {
 
         public const string FfmpegExecutablePath = "../../ffmpeg.exe";

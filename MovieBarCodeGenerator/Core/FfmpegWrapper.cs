@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -116,7 +117,7 @@ namespace MovieBarCodeGenerator.Core
             var fps = frameCount / length.TotalSeconds;
 
             // Output a raw stream of bitmap images taken at the specified frequency
-            var args = $"-i \"{inputPath}\" -vf fps={fps.ToString(System.Globalization.CultureInfo.InvariantCulture)} -c:v bmp -f rawvideo -an -";
+            var args = $"-i \"{inputPath}\" -vf fps={fps.ToInvariantString()} -c:v bmp -f rawvideo -an -";
 
             var process = StartFfmpegInstance(args, redirectError: log != null);
 

@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="CLI\CLIUtils.cs" />
     <Compile Include="Core\BarCodeParameters.cs" />
+    <Compile Include="Core\Utils.cs" />
     <Compile Include="GUI\AboutBox.cs">
       <SubType>Form</SubType>
     </Compile>
