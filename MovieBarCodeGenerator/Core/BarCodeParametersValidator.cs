@@ -38,10 +38,6 @@ namespace MovieBarCodeGenerator.Core
             Func<string, bool> shouldOverwriteOutput)
         {
             var inputPath = rawInputPath.Trim(new[] { '"' });
-            if (!File.Exists(inputPath))
-            {
-                throw new ParameterValidationException("The input file does not exist.");
-            }
 
             var outputPath = rawOutputPath?.Trim(new[] { '"' });
 
@@ -49,7 +45,7 @@ namespace MovieBarCodeGenerator.Core
             {
                 if (string.IsNullOrWhiteSpace(path))
                 {
-                    path = $"{Path.GetFileNameWithoutExtension(inputPath)}.png";
+                    path = $"{GetSafeFileNameWithoutExtension(inputPath)}.png";
                 }
 
                 if (!Path.HasExtension(path))
@@ -73,7 +69,7 @@ namespace MovieBarCodeGenerator.Core
             string smoothedOutputPath = null;
             if (generateSmoothVersion)
             {
-                var name = $"{Path.GetFileNameWithoutExtension(outputPath)}_smoothed{Path.GetExtension(outputPath)}";
+                var name = $"{GetSafeFileNameWithoutExtension(outputPath)}_smoothed{Path.GetExtension(outputPath)}";
                 smoothedOutputPath = Path.Combine(Path.GetDirectoryName(outputPath), name);
                 ValidateOutputPath(ref smoothedOutputPath);
             }
@@ -116,6 +112,19 @@ namespace MovieBarCodeGenerator.Core
                 SmoothedOutputPath = smoothedOutputPath,
                 GenerateSmoothedOutput = generateSmoothVersion,
             };
+        }
+
+        private string GetSafeFileNameWithoutExtension(string input)
+        {
+            try
+            {
+                return Path.GetFileNameWithoutExtension(input);
+            }
+            catch
+            {
+                // TODO: this implementation could largely be improved...
+                return "output";
+            }
         }
     }
 
