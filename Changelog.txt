@@ -1,29 +1,34 @@
+Version 1.5, 2018-08-04
+------------------------
+- [added] Allow input to be an url (both in the CLI and the GUI).
+- [fixed] Replaced the FFmpeg x64 binary by an x86 one to support 32bits platforms.
+
 Version 1.4, 2018-06-17
 ------------------------
 - [fixed] "Unable to save the image: System.NullReferenceException" errors happening on systems where the default decimal separator is not a dot. (the fps parameter was not formatted properly)
 
 Version 1.3, 2018-06-10
 ------------------------
-- [added] live log in the GUI showing the output of FFmpeg.
-- [added] re-added a batch mode and a CLI interface.
+- [added] Live log in the GUI showing the output of FFmpeg.
+- [added] Re-added a batch mode and a CLI interface.
 - [added] Allow a file to be drag and dropped on the input text box.
 
 Version 1.2, 2018-04-29
 ------------------------
-- [fixed] partial image sometimes being saved after cancelling.
+- [fixed] Partial image sometimes being saved after cancelling.
 
 Version 1.1, 2018-04-22
 ------------------------
 - Rewritten from scratch.
-- [changed] now use FFmpeg instead of DirectShow
-		- this means Windows 10 is now properly supported
-		- this also means virtually all video formats can now be read!
-- [added] ability to generate smooth barcodes.
+- [changed] Now use FFmpeg instead of DirectShow
+		- This means Windows 10 is now properly supported
+		- This also means virtually all video formats can now be read!
+- [added] Ability to generate smooth barcodes.
 
 Version 0.5, 2011-02-14
 ------------------------
 - Second public release.
-- [changed] multi-threaded barcode generation.
+- [changed] Multi-threaded barcode generation.
 
 Version 0.1, 2011-03-20
 ------------------------
