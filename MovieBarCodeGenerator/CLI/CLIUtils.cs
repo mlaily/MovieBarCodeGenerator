@@ -21,18 +21,17 @@ namespace MovieBarCodeGenerator.CLI
         /// - a directory path
         /// - a file pattern
         /// - a directory path followed by a file pattern
-        /// - a list of all the above separated by the '|' character
+        /// - an url
         /// </summary>
         /// <returns>A list of existing file path matching the input.</returns>
-        public static IEnumerable<string> GetExpandedAndValidatedFilePaths(IEnumerable<string> rawUserInputs, bool recursive)
+        public static IEnumerable<string> GetExpandedAndValidatedFilePaths(IFileSystemService fileSystemService, IEnumerable<string> rawUserInputs, bool recursive)
         {
             if (rawUserInputs == null)
             {
                 return Enumerable.Empty<string>();
             }
 
-            List<WildCardInput> allInputFiles
-                = new List<WildCardInput>();
+            var allInputFiles = new List<WildCardInput>();
             // At this point, the input files list might contain wildcards needing to be expanded.
             // To do that, we either keep just the file path,
             // or, if the path contains a wildcard, we split the directory path and the file pattern:
@@ -42,12 +41,12 @@ namespace MovieBarCodeGenerator.CLI
                 string inputPattern = "*";
                 if (item.Contains('*') || item.Contains('?'))
                 {
-                    rawInputWithoutWildCards = Path.GetDirectoryName(item);
+                    rawInputWithoutWildCards = fileSystemService.GetDirectoryName(item);
                     if (rawInputWithoutWildCards == "") // No directory name. The input is a simple file pattern
                     {
                         rawInputWithoutWildCards = ".";
                     }
-                    inputPattern = Path.GetFileName(item);
+                    inputPattern = fileSystemService.GetFileName(item);
                 }
                 allInputFiles.Add(new WildCardInput { PathPartWithoutWildcards = rawInputWithoutWildCards, FilePattern = inputPattern });
             }
@@ -58,15 +57,20 @@ namespace MovieBarCodeGenerator.CLI
                 foreach (var input in allInputFiles)
                 {
                     // The only way to know whether a path is a directory or a file is to test for its existence
-                    if (Directory.Exists(input.PathPartWithoutWildcards))
+                    if (fileSystemService.DirectoryExists(input.PathPartWithoutWildcards))
                     {
-                        foreach (var file in Directory.EnumerateFiles(input.PathPartWithoutWildcards, input.FilePattern, searchOption))
+                        foreach (var file in fileSystemService.EnumerateDirectoryFiles(input.PathPartWithoutWildcards, input.FilePattern, searchOption))
                         {
                             yield return file;
                         }
                     }
-                    else if (File.Exists(input.PathPartWithoutWildcards))
+                    else if (fileSystemService.FileExists(input.PathPartWithoutWildcards))
                     {
+                        yield return input.PathPartWithoutWildcards;
+                    }
+                    else 
+                    {
+                        // FFmpeg is able to handle more than file and directory paths (urls...)
                         yield return input.PathPartWithoutWildcards;
                     }
                 }

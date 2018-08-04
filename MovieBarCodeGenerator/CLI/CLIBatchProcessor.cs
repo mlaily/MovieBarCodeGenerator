@@ -54,6 +54,7 @@ namespace MovieBarCodeGenerator.CLI
 - a directory path
 - a file pattern (simple '?' and '*' wildcards are accepted)
 - a directory path followed by a file pattern
+- an url
 This parameter can be set multiple times.",
                 x => allRawInputs.Add(x));
 
@@ -92,7 +93,9 @@ This parameter can be set multiple times.",
                 arguments.UseInputHeight = true;
             }
 
-            var expandedInputFileList = CLIUtils.GetExpandedAndValidatedFilePaths(allRawInputs, arguments.Recursive).ToList();
+            var fileSystemService = new FileSystemService();
+
+            var expandedInputFileList = CLIUtils.GetExpandedAndValidatedFilePaths(fileSystemService, allRawInputs, arguments.Recursive).ToList();
 
             if (expandedInputFileList.Any())
             {
