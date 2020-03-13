@@ -44,11 +44,11 @@ namespace MovieBarCodeGenerator.CLI
 
             var options = new OptionSet();
 
-            options.Add("h|?|help",
+            options.Add("?|help",
                 "Show this help message.",
                 x => ShowHelp(options));
 
-            options.Add("in|input=",
+            options.Add("in=|input=",
                 @"Accepted inputs:
 - a file path
 - a directory path
@@ -58,7 +58,7 @@ namespace MovieBarCodeGenerator.CLI
 This parameter can be set multiple times.",
                 x => allRawInputs.Add(x));
 
-            options.Add("out|output:",
+            options.Add("out=|output=",
                 "Output file or directory. Default: current directory, same name as the input file.",
                 x => arguments.RawOutput = x);
 
@@ -70,15 +70,15 @@ This parameter can be set multiple times.",
                 "If set, input is browsed recursively.",
                 x => arguments.Recursive = true);
 
-            options.Add("w|width:",
+            options.Add("w=|width=",
                 $"Width of the output image. Default: {RawArguments.DefaultWidth}",
                 x => arguments.RawWidth = x);
 
-            options.Add("H|height:",
+            options.Add("h=|H=|height=",
                 "Height of the output image. If this argument is not set, the input height will be used.",
                 x => arguments.RawHeight = x);
 
-            options.Add("b|barwidth|barWidth:",
+            options.Add("b=|barwidth=|barWidth=",
                 $"Width of each bar in the output image. Default: {RawArguments.DefaultBarWidth}",
                 x => arguments.RawBarWidth = x);
 
@@ -86,7 +86,16 @@ This parameter can be set multiple times.",
                 "Also generate a smooth version of the output, suffixed with '_smoothed'.",
                 x => arguments.Smooth = true);
 
-            options.Parse(args);
+            try
+            {
+                options.Parse(args);
+            }
+            catch (OptionException ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}\n");
+                ShowHelp(options);
+                return;
+            }
 
             if (arguments.RawHeight == null)
             {
@@ -94,7 +103,6 @@ This parameter can be set multiple times.",
             }
 
             var fileSystemService = new FileSystemService();
-
             var expandedInputFileList = CLIUtils.GetExpandedAndValidatedFilePaths(fileSystemService, allRawInputs, arguments.Recursive).ToList();
 
             if (expandedInputFileList.Any())
@@ -121,15 +129,15 @@ This parameter can be set multiple times.",
             try
             {
                 parameters = _barCodeParametersValidator.GetValidatedParameters(
-              rawInputPath: arguments.RawInput,
-              rawOutputPath: arguments.RawOutput,
-              rawBarWidth: arguments.RawBarWidth,
-              rawImageWidth: arguments.RawWidth,
-              rawImageHeight: arguments.RawHeight,
-              useInputHeightForOutput: arguments.UseInputHeight,
-              generateSmoothVersion: arguments.Smooth,
-              // Choosing whether to overwrite or not is done after validating parameters, not here
-              shouldOverwriteOutput: x => true);
+                    rawInputPath: arguments.RawInput,
+                    rawOutputPath: arguments.RawOutput,
+                    rawBarWidth: arguments.RawBarWidth,
+                    rawImageWidth: arguments.RawWidth,
+                    rawImageHeight: arguments.RawHeight,
+                    useInputHeightForOutput: arguments.UseInputHeight,
+                    generateSmoothVersion: arguments.Smooth,
+                    // Choosing whether to overwrite or not is done after validating parameters, not here
+                    shouldOverwriteOutput: x => true);
             }
             catch (ParameterValidationException ex)
             {
