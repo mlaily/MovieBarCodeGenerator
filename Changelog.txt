@@ -1,3 +1,7 @@
+Version 1.6, 2020-03-13
+------------------------
+- [fixed] CLI parsing didn't work for short arguments.
+
 Version 1.5, 2018-08-04
 ------------------------
 - [added] Allow input to be an url (both in the CLI and the GUI).
