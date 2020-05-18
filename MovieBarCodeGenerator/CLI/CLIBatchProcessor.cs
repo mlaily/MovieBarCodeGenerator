@@ -187,9 +187,9 @@ This parameter can be set multiple times.",
 
                     try
                     {
-                        if (File.Exists(parameters.OutputPath) && arguments.Overwrite == false)
+                        if (File.Exists(parameters.SmoothedOutputPath) && arguments.Overwrite == false)
                         {
-                            Console.WriteLine($"WARNING: skipped file {parameters.OutputPath} because it already exists.");
+                            Console.WriteLine($"WARNING: skipped file {parameters.SmoothedOutputPath} because it already exists.");
                         }
                         else
                         {
