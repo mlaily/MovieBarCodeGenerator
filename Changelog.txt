@@ -1,3 +1,5 @@
+- [fixed] Fix the application being blurry when the Windows DPI are not set at 100%
+
 Version 1.6, 2020-03-13
 ------------------------
 - [fixed] CLI parsing didn't work for short arguments.
