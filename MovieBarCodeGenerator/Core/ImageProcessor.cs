@@ -38,34 +38,24 @@ namespace MovieBarCodeGenerator.Core
             IProgress<double> progress = null,
             Action<string> log = null)
         {
-            Bitmap finalBitmap = null;
-            Graphics finalBitmapGraphics = null;
-
-            Graphics GetDrawingSurface(int width, int height)
-            {
-                if (finalBitmap == null)
-                {
-                    finalBitmap = new Bitmap(width, height);
-                    finalBitmapGraphics = Graphics.FromImage(finalBitmap);
-                }
-                return finalBitmapGraphics;
-            }
-
             var barCount = (int)Math.Round((double)parameters.Width / parameters.BarWidth);
             var source = ffmpeg.GetImagesFromMedia(inputPath, barCount, cancellationToken, log);
 
             int? finalBitmapHeight = null;
+            Bitmap finalBitmap = null;
+            Graphics finalBitmapGraphics = null;
 
             int x = 0;
             foreach (var image in source)
             {
-                if (finalBitmapHeight == null)
+                if (x == 0)
                 {
                     finalBitmapHeight = parameters.Height ?? image.Height;
+                    finalBitmap = new Bitmap(parameters.Width, finalBitmapHeight.Value);
+                    finalBitmapGraphics = Graphics.FromImage(finalBitmap);
                 }
 
-                var surface = GetDrawingSurface(parameters.Width, finalBitmapHeight.Value);
-                surface.DrawImage(image, x, 0, parameters.BarWidth, finalBitmapHeight.Value);
+                finalBitmapGraphics.DrawImage(image, x, 0, parameters.BarWidth, finalBitmapHeight.Value);
 
                 x += parameters.BarWidth;
 
