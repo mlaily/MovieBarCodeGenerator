@@ -86,6 +86,7 @@ namespace MovieBarCodeGenerator.GUI
                 _cancellationTokenSource = null;
                 generateButton.Text = GenerateButtonText;
                 progressBar1.Value = progressBar1.Minimum;
+                TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
                 return;
             }
 
@@ -114,11 +115,13 @@ namespace MovieBarCodeGenerator.GUI
             }
             catch (OperationCanceledException)
             {
+                TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
                 return;
             }
             catch (Exception ex)
             {
                 AppendLog("Error validating input parameters. " + ex.ToString());
+                TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Error);
                 MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
@@ -140,6 +143,7 @@ Bar width: {parameters.BarCode.BarWidth}");
                     if (_cancellationTokenSource != null)
                     {
                         progressBar1.Value = progressBarValue;
+                        TaskbarProgress.SetValue(Handle, progressBarValue, 100);
                     }
                 }));
             });
@@ -178,11 +182,13 @@ Bar width: {parameters.BarCode.BarWidth}");
             catch (OperationCanceledException)
             {
                 AppendLog("Operation cancelled.");
+                TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
                 return;
             }
             catch (Exception ex)
             {
                 AppendLog("Error: " + ex.ToString());
+                TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Error);
                 MessageBox.Show(this, "Sorry, something went wrong. See the log for more info.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -196,6 +202,7 @@ Bar width: {parameters.BarCode.BarWidth}");
             if (cancellationLocalRef.IsCancellationRequested)
             {
                 AppendLog("Operation cancelled.");
+                TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
                 return;
             }
 
@@ -211,6 +218,7 @@ Bar width: {parameters.BarCode.BarWidth}");
             {
                 var message = $"Unable to save the image: {ex}";
                 AppendLog(message);
+                TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Error);
                 MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
@@ -225,6 +233,7 @@ Bar width: {parameters.BarCode.BarWidth}");
                 {
                     var message = $"An error occured while creating the smoothed version of the barcode. Error: {ex}";
                     AppendLog(message);
+                    TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Error);
                     MessageBox.Show(this, message,
                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
@@ -238,11 +247,13 @@ Bar width: {parameters.BarCode.BarWidth}");
                 {
                     var message = $"Unable to save the smoothed image: {ex}";
                     AppendLog(message);
+                    TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Error);
                     MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
 
             AppendLog("Barcode generated successfully!");
+            TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.NoProgress);
         }
 
         private void browseInputPathButton_Click(object sender, EventArgs e)

@@ -74,6 +74,7 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="CLI\Mono.Options.cs" />
+    <Compile Include="GUI\TaskbarProgress.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="GUI\AboutBox.resx">
