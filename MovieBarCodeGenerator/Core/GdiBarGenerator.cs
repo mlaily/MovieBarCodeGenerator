@@ -11,15 +11,39 @@ namespace MovieBarCodeGenerator.Core
 {
     public class GdiBarGenerator : IBarGenerator
     {
-        public void Initialize(int barWidth, int barHeight)
+        public bool Smoothed { get; }
+
+        public GdiBarGenerator(bool smoothed)
         {
+            Smoothed = smoothed;
         }
 
-        public Image GetBar(BitmapStream source)
+        public Image GetBar(BitmapStream source, int barWidth, int barHeight)
         {
-            // TODO
             var sourceImage = Image.FromStream(source, true, false);
-            return sourceImage;
+
+            if (Smoothed)
+            {
+                var bar = new Bitmap(barWidth, barHeight);
+                using (var g = Graphics.FromImage(bar))
+                {
+                    var srcRect = new Rectangle(0, 0, sourceImage.Width, sourceImage.Height);
+                    var destRect = new Rectangle(0, 0, bar.Width, bar.Height);
+                    g.DrawImage(sourceImage, destRect, srcRect, GraphicsUnit.Pixel);
+                }
+
+                using (bar)
+                using (var onePixelHeight = GetResizedImage(bar, barWidth, 1))
+                {
+                    var smoothed = GetResizedImage(onePixelHeight, barWidth, barHeight);
+                    return smoothed;
+                }
+            }
+            else
+            {
+                // TODO
+                return sourceImage;
+            }
         }
 
         // https://stackoverflow.com/a/24199315/755986

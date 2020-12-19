@@ -152,7 +152,14 @@ This parameter can be set multiple times.",
                 return;
             }
 
-            var barGenerator = new GdiBarGenerator();
+            var gdiBarGenerator = new GdiBarGenerator(smoothed: false);
+            var smoothedBarGenerator = new GdiBarGenerator(smoothed: true);
+
+            var generators = new List<IBarGenerator> { gdiBarGenerator };
+            if (parameters.GenerateSmoothedOutput)
+            {
+                generators.Add(smoothedBarGenerator);
+            }
 
             var result = _imageProcessor.CreateBarCode(
                 parameters.InputPath,
@@ -161,7 +168,7 @@ This parameter can be set multiple times.",
                 CancellationToken.None,
                 null,
                 x => Console.WriteLine(x),
-                barGenerator).Single();
+                generators.ToArray());
 
             try
             {
@@ -172,7 +179,7 @@ This parameter can be set multiple times.",
                 }
                 else
                 {
-                    result.Save(parameters.OutputPath);
+                    result[gdiBarGenerator].Save(parameters.OutputPath);
                     Console.WriteLine($"File {parameters.OutputPath} saved successfully!");
                 }
             }
@@ -183,32 +190,23 @@ This parameter can be set multiple times.",
 
             if (parameters.GenerateSmoothedOutput)
             {
-                Bitmap smoothed;
                 try
                 {
-                    smoothed = _imageProcessor.GetSmoothedCopy(result);
-
-                    try
+                    if (File.Exists(parameters.SmoothedOutputPath) && arguments.Overwrite == false)
                     {
-                        if (File.Exists(parameters.SmoothedOutputPath) && arguments.Overwrite == false)
-                        {
-                            Console.WriteLine($"WARNING: skipped file {parameters.SmoothedOutputPath} because it already exists.");
-                        }
-                        else
-                        {
-                            smoothed.Save(parameters.SmoothedOutputPath);
-                            Console.WriteLine($"File {parameters.SmoothedOutputPath} saved successfully!");
-                        }
+                        Console.WriteLine($"WARNING: skipped file {parameters.SmoothedOutputPath} because it already exists.");
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Console.Error.WriteLine($"Unable to save the smoothed image: {ex}");
+                        result[smoothedBarGenerator].Save(parameters.SmoothedOutputPath);
+                        Console.WriteLine($"File {parameters.SmoothedOutputPath} saved successfully!");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"An error occured while creating the smoothed version of the barcode. Error: {ex}");
+                    Console.Error.WriteLine($"Unable to save the smoothed image: {ex}");
                 }
+
             }
         }
 

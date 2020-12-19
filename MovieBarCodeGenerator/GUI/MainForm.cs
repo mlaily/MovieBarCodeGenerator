@@ -153,7 +153,16 @@ Bar width: {parameters.BarCode.BarWidth}");
 
             // Actually create the barcode:
 
-            Bitmap result = null;
+            var gdiBarGenerator = new GdiBarGenerator(smoothed: false);
+            var smoothedBarGenerator = new GdiBarGenerator(smoothed: true);
+
+            var generators = new List<IBarGenerator> { gdiBarGenerator };
+            if (parameters.GenerateSmoothedOutput)
+            {
+                generators.Add(smoothedBarGenerator);
+            }
+
+            IReadOnlyDictionary<IBarGenerator, Bitmap> result = null;
             try
             {
                 generateButton.Text = CancelButtonText;
@@ -170,8 +179,6 @@ Bar width: {parameters.BarCode.BarWidth}");
 
                 await Task.Run(() =>
                 {
-                    var barGenerator = new GdiBarGenerator();
-
                     result = _imageProcessor.CreateBarCode(
                         parameters.InputPath,
                         parameters.BarCode,
@@ -179,7 +186,7 @@ Bar width: {parameters.BarCode.BarWidth}");
                         _cancellationTokenSource.Token,
                         progress,
                         AppendLog,
-                        barGenerator).Single();
+                        generators.ToArray());
                 }, _cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
@@ -215,7 +222,7 @@ Bar width: {parameters.BarCode.BarWidth}");
 
             try
             {
-                result.Save(parameters.OutputPath);
+                result[gdiBarGenerator].Save(parameters.OutputPath);
             }
             catch (Exception ex)
             {
@@ -227,24 +234,9 @@ Bar width: {parameters.BarCode.BarWidth}");
 
             if (parameters.GenerateSmoothedOutput)
             {
-                Bitmap smoothed;
                 try
                 {
-                    smoothed = _imageProcessor.GetSmoothedCopy(result);
-                }
-                catch (Exception ex)
-                {
-                    var message = $"An error occured while creating the smoothed version of the barcode. Error: {ex}";
-                    AppendLog(message);
-                    TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Error);
-                    MessageBox.Show(this, message,
-                   "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                try
-                {
-                    smoothed.Save(parameters.SmoothedOutputPath);
+                    result[smoothedBarGenerator].Save(parameters.SmoothedOutputPath);
                 }
                 catch (Exception ex)
                 {

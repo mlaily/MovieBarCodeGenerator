@@ -32,13 +32,12 @@ namespace MovieBarCodeGenerator.Core
 {
     public interface IBarGenerator
     {
-        void Initialize(int barWidth, int barHeight);
-        Image GetBar(BitmapStream source);
+        Image GetBar(BitmapStream source, int barWidth, int barHeight);
     }
 
     public class ImageStreamProcessor
     {
-        public Bitmap[] CreateBarCode(
+        public IReadOnlyDictionary<IBarGenerator, Bitmap> CreateBarCode(
             string inputPath,
             BarCodeParameters parameters,
             FfmpegWrapper ffmpeg,
@@ -52,6 +51,7 @@ namespace MovieBarCodeGenerator.Core
 
             Bitmap[] finalBitmaps = new Bitmap[barGenerators.Length];
             Graphics[] finalBitmapGraphics = new Graphics[barGenerators.Length];
+
             int actualBarHeight = 0;
 
             int x = 0;
@@ -67,8 +67,6 @@ namespace MovieBarCodeGenerator.Core
                     {
                         finalBitmaps[i] = new Bitmap(parameters.Width, actualBarHeight);
                         finalBitmapGraphics[i] = Graphics.FromImage(finalBitmaps[i]);
-
-                        barGenerators[i].Initialize(parameters.BarWidth, actualBarHeight);
                     }
                 }
 
@@ -77,7 +75,7 @@ namespace MovieBarCodeGenerator.Core
                     for (int i = 0; i < barGenerators.Length; i++)
                     {
                         bitmapStream.Position = 0;
-                        var bar = barGenerators[i].GetBar(bitmapStream);
+                        var bar = barGenerators[i].GetBar(bitmapStream, parameters.BarWidth, actualBarHeight);
                         var srcRect = new Rectangle(0, 0, bar.Width, bar.Height);
                         var destRect = new Rectangle(x, 0, parameters.BarWidth, actualBarHeight);
                         finalBitmapGraphics[i].DrawImage(bar, destRect, srcRect, GraphicsUnit.Pixel);
@@ -94,42 +92,13 @@ namespace MovieBarCodeGenerator.Core
                 finalBitmapGraphics[i]?.Dispose();
             }
 
-            return finalBitmaps;
-        }
-
-        public Bitmap GetSmoothedCopy(Bitmap inputImage)
-        {
-            using (var onePixelHeight = GetResizedImage(inputImage, inputImage.Width, 1))
+            var result = new Dictionary<IBarGenerator, Bitmap>();
+            for (int i = 0; i < barGenerators.Length; i++)
             {
-                var smoothed = GetResizedImage(onePixelHeight, inputImage.Width, inputImage.Height);
-                return smoothed;
-            }
-        }
-
-        // https://stackoverflow.com/a/24199315/755986
-        public static Bitmap GetResizedImage(Image source, int newWidth, int newHeight)
-        {
-            var destRect = new Rectangle(0, 0, newWidth, newHeight);
-            var destImage = new Bitmap(newWidth, newHeight);
-
-            destImage.SetResolution(source.HorizontalResolution, source.VerticalResolution);
-
-            using (var g = Graphics.FromImage(destImage))
-            {
-                g.CompositingMode = CompositingMode.SourceCopy;
-                g.CompositingQuality = CompositingQuality.HighQuality;
-                g.InterpolationMode = InterpolationMode.NearestNeighbor; // best results for barcodes
-                g.SmoothingMode = SmoothingMode.HighQuality;
-                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-
-                using (var wrapMode = new ImageAttributes())
-                {
-                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-                    g.DrawImage(source, destRect, 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, wrapMode);
-                }
+                result.Add(barGenerators[i], finalBitmaps[i]);
             }
 
-            return destImage;
+            return result;
         }
     }
 }

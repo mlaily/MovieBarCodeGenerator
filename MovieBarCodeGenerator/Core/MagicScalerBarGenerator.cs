@@ -11,11 +11,9 @@ namespace MovieBarCodeGenerator.Core
 {
     public class MagicScalerBarGenerator : IBarGenerator
     {
-        private ProcessImageSettings _processImageSettings;
-
-        public void Initialize(int barWidth, int barHeight)
+        public Image GetBar(BitmapStream source, int barWidth, int barHeight)
         {
-            _processImageSettings = new ProcessImageSettings
+            var processImageSettings = new ProcessImageSettings
             {
                 ResizeMode = CropScaleMode.Stretch,
                 HybridMode = HybridScaleMode.Off,
@@ -26,11 +24,7 @@ namespace MovieBarCodeGenerator.Core
                 Width = barWidth,
                 Height = barHeight,
             };
-        }
-
-        public Image GetBar(BitmapStream source)
-        {
-            using (var pipeline = MagicImageProcessor.BuildPipeline(source, _processImageSettings))
+            using (var pipeline = MagicImageProcessor.BuildPipeline(source, processImageSettings))
             {
                 var resizedStream = new MemoryStream();
                 pipeline.WriteOutput(resizedStream);
