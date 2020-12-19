@@ -16,11 +16,13 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using PhotoSauce.MagicScaler;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -28,40 +30,58 @@ using System.Threading.Tasks;
 
 namespace MovieBarCodeGenerator.Core
 {
-    public class ImageProcessor
+    public interface IBarGenerator
+    {
+        void Initialize(int barWidth, int barHeight);
+        Image GetBar(BitmapStream source);
+    }
+
+    public class ImageStreamProcessor
     {
         public Bitmap CreateBarCode(
             string inputPath,
             BarCodeParameters parameters,
             FfmpegWrapper ffmpeg,
+            IBarGenerator barGenerator,
             CancellationToken cancellationToken,
             IProgress<double> progress = null,
             Action<string> log = null)
         {
             var barCount = (int)Math.Round((double)parameters.Width / parameters.BarWidth);
-            var source = ffmpeg.GetImagesFromMedia(inputPath, barCount, cancellationToken, log);
+            var bitmapStreamSource = ffmpeg.GetImagesFromMedia(inputPath, barCount, cancellationToken, log);
 
-            int? finalBitmapHeight = null;
             Bitmap finalBitmap = null;
             Graphics finalBitmapGraphics = null;
+            int actualHeight = 0;
 
             int x = 0;
-            foreach (var image in source)
+            foreach (var bitmapStream in bitmapStreamSource)
             {
                 if (x == 0)
                 {
-                    finalBitmapHeight = parameters.Height ?? image.Height;
-                    finalBitmap = new Bitmap(parameters.Width, finalBitmapHeight.Value);
+                    var imageInfo = ImageFileInfo.Load(bitmapStream);
+                    bitmapStream.Position = 0;
+
+                    actualHeight = parameters.Height ?? imageInfo.Frames.First().Height;
+
+                    finalBitmap = new Bitmap(parameters.Width, actualHeight);
                     finalBitmapGraphics = Graphics.FromImage(finalBitmap);
+
+                    barGenerator.Initialize(parameters.BarWidth, actualHeight);
                 }
 
-                finalBitmapGraphics.DrawImage(image, x, 0, parameters.BarWidth, finalBitmapHeight.Value);
+                using (bitmapStream)
+                {
 
-                x += parameters.BarWidth;
+                    var bar = barGenerator.GetBar(bitmapStream);
+                    var srcRect = new Rectangle(0, 0, bar.Width, bar.Height);
+                    var destRect = new Rectangle(x, 0, parameters.BarWidth, actualHeight);
+                    finalBitmapGraphics.DrawImage(bar, destRect, srcRect, GraphicsUnit.Pixel);
 
-                progress?.Report((double)x / parameters.Width);
+                    x += parameters.BarWidth;
 
-                image.Dispose();
+                    progress?.Report((double)x / parameters.Width);
+                }
             }
 
             finalBitmapGraphics?.Dispose();

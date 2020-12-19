@@ -108,7 +108,7 @@ namespace MovieBarCodeGenerator.Core
             }
         }
 
-        public IEnumerable<Bitmap> GetImagesFromMedia(string inputPath, int frameCount, CancellationToken cancellationToken, Action<string> log = null)
+        public IEnumerable<BitmapStream> GetImagesFromMedia(string inputPath, int frameCount, CancellationToken cancellationToken, Action<string> log = null)
         {
             var length = GetMediaDuration(inputPath, cancellationToken, log);
 
@@ -127,72 +127,19 @@ namespace MovieBarCodeGenerator.Core
                 process.BeginErrorReadLine();
             }
 
-            IEnumerable<Bitmap> GetLazyStream()
+            IEnumerable<BitmapStream> GetLazyStream()
             {
                 using (cancellationToken.Register(() => TryKill(process)))
+                using (var reader = new BinaryReader(process.StandardOutput.BaseStream))
                 {
-                    foreach (var item in ReadBitmapStream(process.StandardOutput.BaseStream, cancellationToken))
+                    while (BitmapStream.TryCreate(reader, out var bitmapStream, cancellationToken))
                     {
-                        yield return item;
+                        yield return bitmapStream;
                     }
                 }
             }
 
             return GetLazyStream();
-        }
-
-        private IEnumerable<Bitmap> ReadBitmapStream(Stream stdout, CancellationToken cancellationToken)
-        {
-            using (var reader = new BinaryReader(stdout))
-            {
-                while (true)
-                {
-                    Bitmap bmp;
-                    try
-                    {
-                        // https://en.wikipedia.org/wiki/BMP_file_format
-                        var magicNumber = reader.ReadBytes(2);
-                        if (magicNumber.Length != 2)
-                        {
-                            break;
-                        }
-
-                        if (magicNumber[0] != 0x42 || magicNumber[1] != 0x4D)
-                        {
-                            throw new InvalidDataException();
-                        }
-
-                        var bmpSizeBytes = reader.ReadBytes(4);
-                        var bmpSize = BitConverter.ToInt32(bmpSizeBytes, 0);
-
-                        var remainingDataLength = bmpSize - bmpSizeBytes.Length - magicNumber.Length;
-                        var remainingData = reader.ReadBytes(remainingDataLength);
-
-                        var ms = new MemoryStream();
-                        ms.Write(magicNumber, 0, magicNumber.Length);
-                        ms.Write(bmpSizeBytes, 0, bmpSizeBytes.Length);
-                        ms.Write(remainingData, 0, remainingData.Length);
-
-                        // We can't just give it our input stream,
-                        // because it would not stop at the end of the first image.
-                        bmp = new Bitmap(ms);
-                    }
-                    catch (Exception)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            cancellationToken.ThrowIfCancellationRequested();
-                            yield break;
-                        }
-                        else
-                        {
-                            throw;
-                        }
-                    }
-
-                    yield return bmp;
-                }
-            }
         }
     }
 }

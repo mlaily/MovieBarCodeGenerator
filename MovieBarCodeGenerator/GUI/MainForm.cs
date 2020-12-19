@@ -40,7 +40,7 @@ namespace MovieBarCodeGenerator.GUI
         private OpenFileDialog _openFileDialog;
         private SaveFileDialog _saveFileDialog;
         private FfmpegWrapper _ffmpegWrapper;
-        private ImageProcessor _imageProcessor;
+        private ImageStreamProcessor _imageProcessor;
         private BarCodeParametersValidator _barCodeParametersValidator;
 
         private CancellationTokenSource _cancellationTokenSource;
@@ -70,7 +70,7 @@ namespace MovieBarCodeGenerator.GUI
             };
 
             _ffmpegWrapper = new FfmpegWrapper("ffmpeg.exe");
-            _imageProcessor = new ImageProcessor();
+            _imageProcessor = new ImageStreamProcessor();
             _barCodeParametersValidator = new BarCodeParametersValidator();
 
             useInputHeightForOutputCheckBox.Checked = true;
@@ -170,10 +170,13 @@ Bar width: {parameters.BarCode.BarWidth}");
 
                 await Task.Run(() =>
                 {
+                    var barGenerator = new GdiBarGenerator();
+
                     result = _imageProcessor.CreateBarCode(
                         parameters.InputPath,
                         parameters.BarCode,
                         _ffmpegWrapper,
+                        barGenerator,
                         _cancellationTokenSource.Token,
                         progress,
                         AppendLog);

@@ -35,7 +35,7 @@ namespace MovieBarCodeGenerator.CLI
     {
         private BarCodeParametersValidator _barCodeParametersValidator = new BarCodeParametersValidator();
         private FfmpegWrapper _ffmpegWrapper = new FfmpegWrapper("ffmpeg.exe");
-        private ImageProcessor _imageProcessor = new ImageProcessor();
+        private ImageStreamProcessor _imageProcessor = new ImageStreamProcessor();
 
         public void Process(string[] args)
         {
@@ -152,10 +152,13 @@ This parameter can be set multiple times.",
                 return;
             }
 
+            var barGenerator = new GdiBarGenerator();
+
             var result = _imageProcessor.CreateBarCode(
                 parameters.InputPath,
                 parameters.BarCode,
                 _ffmpegWrapper,
+                barGenerator,
                 CancellationToken.None,
                 null,
                 x => Console.WriteLine(x));

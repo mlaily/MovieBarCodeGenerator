@@ -3,8 +3,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MovieBarCodeGenerator.Core;
+using PhotoSauce.MagicScaler;
 
 namespace MovieBarCodeGenerator.Tests
 {
@@ -67,7 +69,7 @@ namespace MovieBarCodeGenerator.Tests
         [DataRow(3)]
         [DataRow(10)]
         [DataRow(21)]
-        public void FfmpegWrapper_GetImagesFromMedia_Returns_Expected_Values(int requestedFrameCount)
+        public async Task FfmpegWrapper_GetImagesFromMedia_Returns_Expected_Values(int requestedFrameCount)
         {
             CreateTestVideoIfNecessary();
             var ffmpegWrapper = new FfmpegWrapper(FfmpegExecutablePath);
@@ -80,10 +82,11 @@ namespace MovieBarCodeGenerator.Tests
 
             CollectionAssert.AllItemsAreNotNull(images);
             Assert.AreEqual(requestedFrameCount, images.Count);
-            foreach (var image in images)
+            foreach (var bitmapStream in images)
             {
-                Assert.AreEqual(TestVideoWidth, image.Width);
-                Assert.AreEqual(TestVideoHeight, image.Height);
+                var imageInfo = await Task.Run(() => ImageFileInfo.Load(bitmapStream));
+                Assert.AreEqual(TestVideoWidth, imageInfo.Frames[0].Width);
+                Assert.AreEqual(TestVideoHeight, imageInfo.Frames[0].Height);
             }
         }
 
