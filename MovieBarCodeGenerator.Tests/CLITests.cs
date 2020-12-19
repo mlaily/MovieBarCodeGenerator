@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FakeItEasy;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MovieBarCodeGenerator.CLI;
 using MovieBarCodeGenerator.Core;
+using NUnit.Framework;
 
 namespace MovieBarCodeGenerator.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class CLITests
     {
         private IFileSystemService _fakeFileSystemService;
@@ -33,7 +33,7 @@ namespace MovieBarCodeGenerator.Tests
 
         const string _myEmptySubDir = @"C:\MyTopDir\MyEmptySubDir\";
 
-        [TestInitialize]
+        [SetUp]
         public void Setup()
         {
             _fakeFileSystemService = A.Fake<IFileSystemService>(x => x.Strict());
@@ -120,39 +120,39 @@ namespace MovieBarCodeGenerator.Tests
             A.CallTo(() => _fakeFileSystemService.EnumerateDirectoryFiles(@".", "*.mp4", SearchOption.AllDirectories)).Returns(new string[] { _file4 });
         }
 
-        [DataRow(null, false, new string[] { })]
-        [DataRow(new string[] { }, false, new string[] { })]
-        [DataRow(new string[] { _root }, false, new string[] { _file1 })]
-        [DataRow(new string[] { _root, _root }, false, new string[] { _file1, _file1 })]
-        [DataRow(new string[] { _root }, true, new string[] { _file1, _file2, _file3, _file4, _file5, _file6, _file7 })]
-        [DataRow(new string[] { _myTopDir }, false, new string[] { _file2, _file3 })]
-        [DataRow(new string[] { _myEmptySubDir }, false, new string[] { })]
-        [DataRow(new string[] { _myEmptySubDir }, true, new string[] { })]
-        [DataRow(new string[] { _file1 }, false, new string[] { _file1 })]
-        [DataRow(new string[] { _file1 }, true, new string[] { _file1 })]
-        [DataRow(new string[] { _file1, _file7 }, false, new string[] { _file1, _file7 })]
-        [DataRow(new string[] { _file1, _file7 }, true, new string[] { _file1, _file7 })]
-        [DataRow(new string[] { _file2, _mySubDirWithOneFile }, false, new string[] { _file2, _file4 })]
-        [DataRow(new string[] { _file2, _mySubDirWithOneFile }, true, new string[] { _file2, _file4 })]
-        [DataRow(new string[] { _file1, _myTopDir }, false, new string[] { _file1, _file2, _file3 })]
-        [DataRow(new string[] { _file1, _myTopDir }, true, new string[] { _file1, _file2, _file3, _file4, _file5, _file6, _file7 })]
-        [DataRow(new string[] { @"C:\*" }, false, new string[] { _file1 })]
-        [DataRow(new string[] { @"C:\*" }, true, new string[] { _file1, _file2, _file3, _file4, _file5, _file6, _file7 })]
-        [DataRow(new string[] { @"C:\File*" }, false, new string[] { _file1 })]
-        [DataRow(new string[] { @"C:\File*" }, true, new string[] { _file1, _file2, _file3, _file4, _file5, _file6, _file7 })]
-        [DataRow(new string[] { @"C:\Bla*" }, false, new string[] { })]
-        [DataRow(new string[] { @"C:\Bla*" }, true, new string[] { })]
-        [DataRow(new string[] { @"C:\*.mp4" }, false, new string[] { })]
-        [DataRow(new string[] { @"C:\*.mp4" }, true, new string[] { _file4 })]
-        [DataRow(new string[] { @"C:\MyTopDir\File*" }, false, new string[] { _file2, _file3 })]
-        [DataRow(new string[] { @"C:\MyTopDir\File*" }, true, new string[] { _file2, _file3, _file4, _file5, _file6, _file7 })]
-        [DataRow(new string[] { @"C:\MyTopDir\*.mp4" }, false, new string[] { })]
-        [DataRow(new string[] { @"C:\MyTopDir\*.mp4" }, true, new string[] { _file4 })]
-        [DataRow(new string[] { @"*.mp4" }, false, new string[] { })]
-        [DataRow(new string[] { @"*.mp4" }, true, new string[] { _file4 })]
-        [DataRow(new string[] { "http://test.com/bla/file.mkv" }, false, new string[] { "http://test.com/bla/file.mkv" })]
-        [DataRow(new string[] { "http://test.com/bla/file.mkv" }, true, new string[] { "http://test.com/bla/file.mkv" })]
-        [TestMethod]
+        [TestCase(null, false, new string[] { })]
+        [TestCase(new string[] { }, false, new string[] { })]
+        [TestCase(new string[] { _root }, false, new string[] { _file1 })]
+        [TestCase(new string[] { _root, _root }, false, new string[] { _file1, _file1 })]
+        [TestCase(new string[] { _root }, true, new string[] { _file1, _file2, _file3, _file4, _file5, _file6, _file7 })]
+        [TestCase(new string[] { _myTopDir }, false, new string[] { _file2, _file3 })]
+        [TestCase(new string[] { _myEmptySubDir }, false, new string[] { })]
+        [TestCase(new string[] { _myEmptySubDir }, true, new string[] { })]
+        [TestCase(new string[] { _file1 }, false, new string[] { _file1 })]
+        [TestCase(new string[] { _file1 }, true, new string[] { _file1 })]
+        [TestCase(new string[] { _file1, _file7 }, false, new string[] { _file1, _file7 })]
+        [TestCase(new string[] { _file1, _file7 }, true, new string[] { _file1, _file7 })]
+        [TestCase(new string[] { _file2, _mySubDirWithOneFile }, false, new string[] { _file2, _file4 })]
+        [TestCase(new string[] { _file2, _mySubDirWithOneFile }, true, new string[] { _file2, _file4 })]
+        [TestCase(new string[] { _file1, _myTopDir }, false, new string[] { _file1, _file2, _file3 })]
+        [TestCase(new string[] { _file1, _myTopDir }, true, new string[] { _file1, _file2, _file3, _file4, _file5, _file6, _file7 })]
+        [TestCase(new string[] { @"C:\*" }, false, new string[] { _file1 })]
+        [TestCase(new string[] { @"C:\*" }, true, new string[] { _file1, _file2, _file3, _file4, _file5, _file6, _file7 })]
+        [TestCase(new string[] { @"C:\File*" }, false, new string[] { _file1 })]
+        [TestCase(new string[] { @"C:\File*" }, true, new string[] { _file1, _file2, _file3, _file4, _file5, _file6, _file7 })]
+        [TestCase(new string[] { @"C:\Bla*" }, false, new string[] { })]
+        [TestCase(new string[] { @"C:\Bla*" }, true, new string[] { })]
+        [TestCase(new string[] { @"C:\*.mp4" }, false, new string[] { })]
+        [TestCase(new string[] { @"C:\*.mp4" }, true, new string[] { _file4 })]
+        [TestCase(new string[] { @"C:\MyTopDir\File*" }, false, new string[] { _file2, _file3 })]
+        [TestCase(new string[] { @"C:\MyTopDir\File*" }, true, new string[] { _file2, _file3, _file4, _file5, _file6, _file7 })]
+        [TestCase(new string[] { @"C:\MyTopDir\*.mp4" }, false, new string[] { })]
+        [TestCase(new string[] { @"C:\MyTopDir\*.mp4" }, true, new string[] { _file4 })]
+        [TestCase(new string[] { @"*.mp4" }, false, new string[] { })]
+        [TestCase(new string[] { @"*.mp4" }, true, new string[] { _file4 })]
+        [TestCase(new string[] { "http://test.com/bla/file.mkv" }, false, new string[] { "http://test.com/bla/file.mkv" })]
+        [TestCase(new string[] { "http://test.com/bla/file.mkv" }, true, new string[] { "http://test.com/bla/file.mkv" })]
+        [Test]
         public void GetExpandedAndValidatedFilePaths_Returns_Expected_Result(string[] input, bool recursive, string[] expectedOutput)
         {
             var output = CLIUtils.GetExpandedAndValidatedFilePaths(_fakeFileSystemService, input, recursive).ToList();

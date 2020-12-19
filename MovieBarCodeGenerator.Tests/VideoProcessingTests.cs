@@ -4,23 +4,21 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MovieBarCodeGenerator.Core;
+using NUnit.Framework;
 using PhotoSauce.MagicScaler;
 
 namespace MovieBarCodeGenerator.Tests
 {
-    [TestClass]
+    [TestFixture]
     public class VideoProcessingTests
     {
 
-        public const string FfmpegExecutablePath = "../../ffmpeg.exe";
-        public const string TestVideoFileName = "test.mkv";
+        public string FfmpegExecutablePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "../../ffmpeg.exe");
+        public string TestVideoFileName = Path.Combine(TestContext.CurrentContext.TestDirectory, "test.mkv");
         public const int TestVideoWidth = 1280;
         public const int TestVideoHeight = 720;
         public const int TestVideoDuration = 10;
-
-        public TestContext TestContext { get; set; }
 
         private void CreateTestVideoIfNecessary()
         {
@@ -38,13 +36,13 @@ namespace MovieBarCodeGenerator.Tests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void FfFmpegExecutableExists()
         {
             Assert.IsTrue(File.Exists(FfmpegExecutablePath));
         }
 
-        [TestMethod]
+        [Test]
         public void TestFileCanBeCreated()
         {
             CreateTestVideoIfNecessary();
@@ -52,7 +50,7 @@ namespace MovieBarCodeGenerator.Tests
             Assert.IsTrue(File.Exists(TestVideoFileName));
         }
 
-        [TestMethod]
+        [Test]
         public void FfmpegWrapper_GetMediaDuration_Returns_Correct_Value()
         {
             CreateTestVideoIfNecessary();
@@ -63,12 +61,12 @@ namespace MovieBarCodeGenerator.Tests
             Assert.AreEqual(TimeSpan.FromSeconds(TestVideoDuration), duration);
         }
 
-        [TestMethod]
-        [DataRow(1)]
-        [DataRow(2)]
-        [DataRow(3)]
-        [DataRow(10)]
-        [DataRow(21)]
+        [Test]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(10)]
+        [TestCase(21)]
         public async Task FfmpegWrapper_GetImagesFromMedia_Returns_Expected_Values(int requestedFrameCount)
         {
             CreateTestVideoIfNecessary();

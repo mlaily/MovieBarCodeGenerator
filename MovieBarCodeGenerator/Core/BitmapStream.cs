@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace MovieBarCodeGenerator.Core
 {
+    /// <summary>
+    /// A data stream for a single bitmap image.
+    /// </summary>
     public class BitmapStream : Stream
     {
         public static bool TryCreate(BinaryReader reader, out BitmapStream bitmapStream, CancellationToken cancellationToken)
