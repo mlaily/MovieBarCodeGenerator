@@ -176,10 +176,10 @@ Bar width: {parameters.BarCode.BarWidth}");
                         parameters.InputPath,
                         parameters.BarCode,
                         _ffmpegWrapper,
-                        barGenerator,
                         _cancellationTokenSource.Token,
                         progress,
-                        AppendLog);
+                        AppendLog,
+                        barGenerator).Single();
                 }, _cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)

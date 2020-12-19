@@ -38,21 +38,21 @@ namespace MovieBarCodeGenerator.Core
 
     public class ImageStreamProcessor
     {
-        public Bitmap CreateBarCode(
+        public Bitmap[] CreateBarCode(
             string inputPath,
             BarCodeParameters parameters,
             FfmpegWrapper ffmpeg,
-            IBarGenerator barGenerator,
             CancellationToken cancellationToken,
             IProgress<double> progress = null,
-            Action<string> log = null)
+            Action<string> log = null,
+            params IBarGenerator[] barGenerators)
         {
             var barCount = (int)Math.Round((double)parameters.Width / parameters.BarWidth);
             var bitmapStreamSource = ffmpeg.GetImagesFromMedia(inputPath, barCount, cancellationToken, log);
 
-            Bitmap finalBitmap = null;
-            Graphics finalBitmapGraphics = null;
-            int actualHeight = 0;
+            Bitmap[] finalBitmaps = new Bitmap[barGenerators.Length];
+            Graphics[] finalBitmapGraphics = new Graphics[barGenerators.Length];
+            int actualBarHeight = 0;
 
             int x = 0;
             foreach (var bitmapStream in bitmapStreamSource)
@@ -60,23 +60,28 @@ namespace MovieBarCodeGenerator.Core
                 if (x == 0)
                 {
                     var imageInfo = ImageFileInfo.Load(bitmapStream);
-                    bitmapStream.Position = 0;
 
-                    actualHeight = parameters.Height ?? imageInfo.Frames.First().Height;
+                    actualBarHeight = parameters.Height ?? imageInfo.Frames.First().Height;
 
-                    finalBitmap = new Bitmap(parameters.Width, actualHeight);
-                    finalBitmapGraphics = Graphics.FromImage(finalBitmap);
+                    for (int i = 0; i < barGenerators.Length; i++)
+                    {
+                        finalBitmaps[i] = new Bitmap(parameters.Width, actualBarHeight);
+                        finalBitmapGraphics[i] = Graphics.FromImage(finalBitmaps[i]);
 
-                    barGenerator.Initialize(parameters.BarWidth, actualHeight);
+                        barGenerators[i].Initialize(parameters.BarWidth, actualBarHeight);
+                    }
                 }
 
                 using (bitmapStream)
                 {
-
-                    var bar = barGenerator.GetBar(bitmapStream);
-                    var srcRect = new Rectangle(0, 0, bar.Width, bar.Height);
-                    var destRect = new Rectangle(x, 0, parameters.BarWidth, actualHeight);
-                    finalBitmapGraphics.DrawImage(bar, destRect, srcRect, GraphicsUnit.Pixel);
+                    for (int i = 0; i < barGenerators.Length; i++)
+                    {
+                        bitmapStream.Position = 0;
+                        var bar = barGenerators[i].GetBar(bitmapStream);
+                        var srcRect = new Rectangle(0, 0, bar.Width, bar.Height);
+                        var destRect = new Rectangle(x, 0, parameters.BarWidth, actualBarHeight);
+                        finalBitmapGraphics[i].DrawImage(bar, destRect, srcRect, GraphicsUnit.Pixel);
+                    }
 
                     x += parameters.BarWidth;
 
@@ -84,9 +89,12 @@ namespace MovieBarCodeGenerator.Core
                 }
             }
 
-            finalBitmapGraphics?.Dispose();
+            for (int i = 0; i < barGenerators.Length; i++)
+            {
+                finalBitmapGraphics[i]?.Dispose();
+            }
 
-            return finalBitmap;
+            return finalBitmaps;
         }
 
         public Bitmap GetSmoothedCopy(Bitmap inputImage)

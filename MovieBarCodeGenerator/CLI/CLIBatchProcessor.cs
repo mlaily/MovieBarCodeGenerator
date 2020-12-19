@@ -158,10 +158,10 @@ This parameter can be set multiple times.",
                 parameters.InputPath,
                 parameters.BarCode,
                 _ffmpegWrapper,
-                barGenerator,
                 CancellationToken.None,
                 null,
-                x => Console.WriteLine(x));
+                x => Console.WriteLine(x),
+                barGenerator).Single();
 
             try
             {
