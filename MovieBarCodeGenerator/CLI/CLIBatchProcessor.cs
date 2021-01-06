@@ -152,8 +152,8 @@ This parameter can be set multiple times.",
                 return;
             }
 
-            var gdiBarGenerator = new GdiBarGenerator(smoothed: false);
-            var smoothedBarGenerator = new GdiBarGenerator(smoothed: true);
+            var gdiBarGenerator = GdiBarGenerator.CreateLegacy(false);
+            var smoothedBarGenerator = GdiBarGenerator.CreateLegacy(true);
 
             var generators = new List<IBarGenerator> { gdiBarGenerator };
             if (parameters.GenerateSmoothedOutput)
@@ -161,7 +161,7 @@ This parameter can be set multiple times.",
                 generators.Add(smoothedBarGenerator);
             }
 
-            var result = _imageProcessor.CreateBarCode(
+            var result = _imageProcessor.CreateBarCodes(
                 parameters.InputPath,
                 parameters.BarCode,
                 _ffmpegWrapper,

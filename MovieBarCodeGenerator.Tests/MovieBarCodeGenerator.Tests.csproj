@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CLITests.cs" />
+    <Compile Include="DebugTests.cs" />
     <Compile Include="VideoProcessingTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MiscTests.cs" />

@@ -9,63 +9,108 @@ using System.Threading.Tasks;
 
 namespace MovieBarCodeGenerator.Core
 {
+    public enum GdiAverage
+    {
+        No,
+        /// <summary>
+        /// Old method. Scale the width, then the height.
+        /// </summary>
+        TwoPasses,
+        /// <summary>
+        /// New method. Scale both the width and height at once.
+        /// Probably quicker, and more faithul than the two pass.
+        /// </summary>
+        OnePass,
+    }
+
+    public enum ScalingMode
+    {
+        /// <summary>
+        /// Use sane settings for scaling with GDI.
+        /// </summary>
+        Sane,
+        /// <summary>
+        /// Default GDI settings.
+        /// </summary>
+        Legacy,
+    }
     public class GdiBarGenerator : IBarGenerator
     {
-        public bool Smoothed { get; }
+        public GdiAverage Average { get; }
+        public InterpolationMode InterpolationMode { get; }
+        public ScalingMode ScalingMode { get; }
 
-        public GdiBarGenerator(bool smoothed)
+        public static GdiBarGenerator CreateLegacy(bool average)
+            => new GdiBarGenerator(
+                average ? GdiAverage.TwoPasses : GdiAverage.No,
+                ScalingMode.Legacy,
+                average ? InterpolationMode.NearestNeighbor : InterpolationMode.Default);
+
+        public GdiBarGenerator(
+            GdiAverage average = GdiAverage.No,
+            ScalingMode scalingMode = ScalingMode.Sane,
+            InterpolationMode interpolationMode = InterpolationMode.HighQualityBicubic)
         {
-            Smoothed = smoothed;
+            Average = average;
+            ScalingMode = scalingMode;
+            InterpolationMode = interpolationMode;
         }
+
+        public string Name =>
+            $"GDI"
+            + $"-Average={Average}"
+            + $"-ScalingMode={ScalingMode}"
+            + $"-InterpolationMode={InterpolationMode}";
 
         public Image GetBar(BitmapStream source, int barWidth, int barHeight)
         {
             var sourceImage = Image.FromStream(source, true, false);
+            var useSaneDefaults = ScalingMode == ScalingMode.Sane;
 
-            if (Smoothed)
+            if (Average == GdiAverage.TwoPasses) // Scale the width first, then the height
             {
-                var bar = new Bitmap(barWidth, barHeight);
-                using (var g = Graphics.FromImage(bar))
-                {
-                    var srcRect = new Rectangle(0, 0, sourceImage.Width, sourceImage.Height);
-                    var destRect = new Rectangle(0, 0, bar.Width, bar.Height);
-                    g.DrawImage(sourceImage, destRect, srcRect, GraphicsUnit.Pixel);
-                }
-
-                using (bar)
-                using (var onePixelHeight = GetResizedImage(bar, barWidth, 1))
-                {
-                    var smoothed = GetResizedImage(onePixelHeight, barWidth, barHeight);
-                    return smoothed;
-                }
+                using (sourceImage)
+                using (var widthResized = GetResizedImage(sourceImage, barWidth, barHeight, useSaneDefaults))
+                using (var heightResized = GetResizedImage(widthResized, barWidth, 1))
+                    return GetResizedImage(heightResized, barWidth, barHeight);
+            }
+            else if (Average == GdiAverage.OnePass) // Scale everything at the same time
+            {
+                using (sourceImage)
+                using (var bothResized = GetResizedImage(sourceImage, barWidth, 1, useSaneDefaults))
+                    return GetResizedImage(bothResized, barWidth, barHeight);
             }
             else
             {
-                // TODO
-                return sourceImage;
+                using (sourceImage)
+                    return GetResizedImage(sourceImage, barWidth, barHeight, useSaneDefaults);
             }
         }
 
         // https://stackoverflow.com/a/24199315/755986
-        public static Bitmap GetResizedImage(Image source, int newWidth, int newHeight)
+        // https://photosauce.net/blog/post/image-scaling-with-gdi-part-3-drawimage-and-the-settings-that-affect-it
+        public Bitmap GetResizedImage(Image source, int newWidth, int newHeight, bool useSaneDefaults = true)
         {
-            var destRect = new Rectangle(0, 0, newWidth, newHeight);
             var destImage = new Bitmap(newWidth, newHeight);
+            var destRect = new Rectangle(0, 0, newWidth, newHeight);
 
             destImage.SetResolution(source.HorizontalResolution, source.VerticalResolution);
 
             using (var g = Graphics.FromImage(destImage))
             {
-                g.CompositingMode = CompositingMode.SourceCopy;
-                g.CompositingQuality = CompositingQuality.HighQuality;
-                g.InterpolationMode = InterpolationMode.NearestNeighbor; // best results for barcodes
-                g.SmoothingMode = SmoothingMode.HighQuality;
-                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-
-                using (var wrapMode = new ImageAttributes())
+                using (var attributes = new ImageAttributes())
                 {
-                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-                    g.DrawImage(source, destRect, 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, wrapMode);
+                    if (useSaneDefaults)
+                    {
+                        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                        g.InterpolationMode = InterpolationMode;
+                        g.CompositingMode = CompositingMode.SourceCopy;
+                        g.CompositingQuality = CompositingQuality.HighSpeed; // Has no effect for our usage (no transparence)
+                        g.SmoothingMode = SmoothingMode.None; // Useless too since we are not dealing with vector graphics
+
+                        attributes.SetWrapMode(WrapMode.TileFlipXY);
+                    }
+                    g.DrawImage(source, destRect, 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attributes);
                 }
             }
 

@@ -153,8 +153,8 @@ Bar width: {parameters.BarCode.BarWidth}");
 
             // Actually create the barcode:
 
-            var gdiBarGenerator = new GdiBarGenerator(smoothed: false);
-            var smoothedBarGenerator = new GdiBarGenerator(smoothed: true);
+            var gdiBarGenerator = GdiBarGenerator.CreateLegacy(false);
+            var smoothedBarGenerator = GdiBarGenerator.CreateLegacy(true);
 
             var generators = new List<IBarGenerator> { gdiBarGenerator };
             if (parameters.GenerateSmoothedOutput)
@@ -179,7 +179,7 @@ Bar width: {parameters.BarCode.BarWidth}");
 
                 await Task.Run(() =>
                 {
-                    result = _imageProcessor.CreateBarCode(
+                    result = _imageProcessor.CreateBarCodes(
                         parameters.InputPath,
                         parameters.BarCode,
                         _ffmpegWrapper,

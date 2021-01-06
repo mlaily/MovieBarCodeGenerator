@@ -32,12 +32,13 @@ namespace MovieBarCodeGenerator.Core
 {
     public interface IBarGenerator
     {
+        string Name { get; }
         Image GetBar(BitmapStream source, int barWidth, int barHeight);
     }
 
     public class ImageStreamProcessor
     {
-        public IReadOnlyDictionary<IBarGenerator, Bitmap> CreateBarCode(
+        public IReadOnlyDictionary<IBarGenerator, Bitmap> CreateBarCodes(
             string inputPath,
             BarCodeParameters parameters,
             FfmpegWrapper ffmpeg,
