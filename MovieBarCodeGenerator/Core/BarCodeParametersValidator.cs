@@ -27,22 +27,21 @@ namespace MovieBarCodeGenerator.Core
 {
     public class BarCodeParametersValidator
     {
-        public CompleteBarCodeGenerationParameters GetValidatedParameters(
+        public BarCodeParameters GetValidatedParameters(
             string rawInputPath,
-            string rawOutputPath,
+            string rawBaseOutputPath,
             string rawBarWidth,
             string rawImageWidth,
             string rawImageHeight,
             bool useInputHeightForOutput,
-            bool generateSmoothVersion,
-            Func<string, bool> shouldOverwriteOutput)
+            Func<IReadOnlyCollection<string>, bool> shouldOverwriteOutputPaths,
+            IEnumerable<IBarGenerator> barGenerators)
         {
             var inputPath = rawInputPath.Trim(new[] { '"' });
 
-            var outputPath = rawOutputPath?.Trim(new[] { '"' });
-
-            void ValidateOutputPath(ref string path)
+            (string Path, bool AlreadyExists) ValidateOutputPath(string initialPath)
             {
+                string path = initialPath;
                 if (string.IsNullOrWhiteSpace(path))
                 {
                     path = $"{GetSafeFileNameWithoutExtension(inputPath)}.png";
@@ -58,20 +57,20 @@ namespace MovieBarCodeGenerator.Core
                     throw new ParameterValidationException("The output path is invalid.");
                 }
 
-                if (File.Exists(path) && shouldOverwriteOutput(path) == false)
-                {
-                    throw new OperationCanceledException();
-                }
+                return (path, File.Exists(path));
             }
 
-            ValidateOutputPath(ref outputPath);
+            var baseOutputPath = ValidateOutputPath(rawBaseOutputPath?.Trim(new[] { '"' })).Path;
 
-            string smoothedOutputPath = null;
-            if (generateSmoothVersion)
+            var outputPaths = from generator in barGenerators
+                              let name = $"{GetSafeFileNameWithoutExtension(baseOutputPath)}{generator.FileNameSuffix}{Path.GetExtension(baseOutputPath)}"
+                              let path = Path.Combine(Path.GetDirectoryName(baseOutputPath), name)
+                              select new { generator, ValidatedPath = ValidateOutputPath(path) };
+
+            if (outputPaths.Any(x => x.ValidatedPath.AlreadyExists)
+                && shouldOverwriteOutputPaths(outputPaths.Where(x => x.ValidatedPath.AlreadyExists).Select(x => x.ValidatedPath.Path).ToList()) == false)
             {
-                var name = $"{GetSafeFileNameWithoutExtension(outputPath)}_smoothed{Path.GetExtension(outputPath)}";
-                smoothedOutputPath = Path.Combine(Path.GetDirectoryName(outputPath), name);
-                ValidateOutputPath(ref smoothedOutputPath);
+                throw new OperationCanceledException("At least one output file already exists.");
             }
 
             if (!int.TryParse(rawBarWidth, out var barWidth) || barWidth <= 0)
@@ -97,20 +96,13 @@ namespace MovieBarCodeGenerator.Core
                 }
             }
 
-            var barcodeParameters = new BarCodeParameters()
+            return new BarCodeParameters
             {
+                InputPath = inputPath,
+                GeneratorOutputPaths = outputPaths.ToDictionary(x => x.generator, x => x.ValidatedPath.Path),
                 BarWidth = barWidth,
                 Width = imageWidth,
                 Height = imageHeight,
-            };
-
-            return new CompleteBarCodeGenerationParameters
-            {
-                BarCode = barcodeParameters,
-                InputPath = inputPath,
-                OutputPath = outputPath,
-                SmoothedOutputPath = smoothedOutputPath,
-                GenerateSmoothedOutput = generateSmoothVersion,
             };
         }
 

@@ -42,15 +42,21 @@ namespace MovieBarCodeGenerator.Core
 
         public static GdiBarGenerator CreateLegacy(bool average)
             => new GdiBarGenerator(
+                average ? "Legacy (smoothed)" : "Legacy",
+                average ? "_legacy_smoothed" : "_legacy",
                 average ? GdiAverage.TwoPasses : GdiAverage.No,
                 ScalingMode.Legacy,
                 average ? InterpolationMode.NearestNeighbor : InterpolationMode.Default);
 
         public GdiBarGenerator(
+            string displayName = null,
+            string fileNameSuffix = null,
             GdiAverage average = GdiAverage.No,
             ScalingMode scalingMode = ScalingMode.Sane,
             InterpolationMode interpolationMode = InterpolationMode.HighQualityBicubic)
         {
+            _displayName = displayName;
+            FileNameSuffix = fileNameSuffix ?? "";
             Average = average;
             ScalingMode = scalingMode;
             InterpolationMode = interpolationMode;
@@ -61,6 +67,9 @@ namespace MovieBarCodeGenerator.Core
             + $"-Average={Average}"
             + $"-ScalingMode={ScalingMode}"
             + $"-InterpolationMode={InterpolationMode}";
+        private string _displayName;
+        public string DisplayName => _displayName ?? Name;
+        public string FileNameSuffix { get; }
 
         public Image GetBar(BitmapStream source, int barWidth, int barHeight)
         {

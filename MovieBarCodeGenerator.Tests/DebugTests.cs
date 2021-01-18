@@ -71,7 +71,7 @@ namespace MovieBarCodeGenerator.Tests
             {
                 foreach (var interpolationMode in new[] { InterpolationMode.HighQualityBicubic, InterpolationMode.NearestNeighbor, InterpolationMode.Bicubic })
                 {
-                    allGenerators.Add(new GdiBarGenerator(average, ScalingMode.Sane, interpolationMode));
+                    allGenerators.Add(new GdiBarGenerator(average: average, scalingMode: ScalingMode.Sane, interpolationMode: interpolationMode));
                 }
             }
 
@@ -84,7 +84,7 @@ namespace MovieBarCodeGenerator.Tests
                         InterpolationSettings.NearestNeighbor,
                     })
                 {
-                    allGenerators.Add(new MagicScalerBarGenerator(average, interpolation));
+                    allGenerators.Add(new MagicScalerBarGenerator("noname", average: average, interpolation: interpolation));
                 }
             }
 
@@ -95,13 +95,17 @@ namespace MovieBarCodeGenerator.Tests
 
             {
                 var results = streamProcessor.CreateBarCodes(
-                    inputPath,
-                    new BarCodeParameters { Width = 1280, BarWidth = 1 },
+                    new BarCodeParameters
+                    {
+                        Width = 1280,
+                        BarWidth = 1,
+                        InputPath = inputPath,
+                        GeneratorOutputPaths = allGenerators.ToDictionary(x => x, x => x.Name)
+                    },
                     ffmpegWrapper,
                      CancellationToken.None,
                      progress: null,
-                     log: x => TestContext.WriteLine(x),
-                     allGenerators.ToArray());
+                     log: x => TestContext.WriteLine(x));
 
                 foreach (var result in results)
                 {

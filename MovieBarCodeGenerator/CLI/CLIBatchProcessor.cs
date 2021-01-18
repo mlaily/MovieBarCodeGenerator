@@ -82,9 +82,10 @@ This parameter can be set multiple times.",
                 $"Width of each bar in the output image. Default: {RawArguments.DefaultBarWidth}",
                 x => arguments.RawBarWidth = x);
 
-            options.Add("s|smooth",
-                "Also generate a smooth version of the output, suffixed with '_smoothed'.",
-                x => arguments.Smooth = true);
+            // TODO
+            //options.Add("s|smooth",
+            //    "Also generate a smooth version of the output, suffixed with '_smoothed'.",
+            //    x => arguments.Smooth = true);
 
             try
             {
@@ -125,19 +126,23 @@ This parameter can be set multiple times.",
         {
             Console.WriteLine($"Processing file '{arguments.RawInput}':");
 
-            CompleteBarCodeGenerationParameters parameters;
+            // TODO
+            var generators = new[] { new MagicScalerBarGenerator("Normal") };
+
+            IReadOnlyCollection<string> existingOutputs = Array.Empty<string>();
+            BarCodeParameters parameters;
             try
             {
                 parameters = _barCodeParametersValidator.GetValidatedParameters(
                     rawInputPath: arguments.RawInput,
-                    rawOutputPath: arguments.RawOutput,
+                    rawBaseOutputPath: arguments.RawOutput,
                     rawBarWidth: arguments.RawBarWidth,
                     rawImageWidth: arguments.RawWidth,
                     rawImageHeight: arguments.RawHeight,
                     useInputHeightForOutput: arguments.UseInputHeight,
-                    generateSmoothVersion: arguments.Smooth,
                     // Choosing whether to overwrite or not is done after validating parameters, not here
-                    shouldOverwriteOutput: x => true);
+                    shouldOverwriteOutputPaths: x => { existingOutputs = x; return true; },
+                    generators);
             }
             catch (ParameterValidationException ex)
             {
@@ -145,68 +150,43 @@ This parameter can be set multiple times.",
                 return;
             }
 
-            if (File.Exists(parameters.OutputPath) && arguments.Overwrite == false)
+            if (existingOutputs.Any() && arguments.Overwrite == false)
             {
                 // Check once before generating the image, and once just before saving.
-                Console.WriteLine($"WARNING: skipped file {parameters.OutputPath} because it already exists.");
+                Console.WriteLine($"WARNING: skipped file {parameters.InputPath} because the output already exists. ({string.Join(", ", existingOutputs.Select(x => $"'{x}'"))})");
                 return;
             }
 
-            var gdiBarGenerator = GdiBarGenerator.CreateLegacy(false);
-            var smoothedBarGenerator = GdiBarGenerator.CreateLegacy(true);
-
-            var generators = new List<IBarGenerator> { gdiBarGenerator };
-            if (parameters.GenerateSmoothedOutput)
+            IReadOnlyDictionary<IBarGenerator, Bitmap> result = null;
+            Task.Run(() =>
             {
-                generators.Add(smoothedBarGenerator);
-            }
-
-            var result = _imageProcessor.CreateBarCodes(
-                parameters.InputPath,
-                parameters.BarCode,
-                _ffmpegWrapper,
-                CancellationToken.None,
-                null,
-                x => Console.WriteLine(x),
-                generators.ToArray());
-
-            try
-            {
-                if (File.Exists(parameters.OutputPath) && arguments.Overwrite == false)
-                {
-                    // Check once before generating the image, and once just before saving.
-                    Console.WriteLine($"WARNING: skipped file {parameters.OutputPath} because it already exists.");
-                }
-                else
-                {
-                    result[gdiBarGenerator].Save(parameters.OutputPath);
-                    Console.WriteLine($"File {parameters.OutputPath} saved successfully!");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Unable to save the image: {ex}");
-            }
-
-            if (parameters.GenerateSmoothedOutput)
+                result = _imageProcessor.CreateBarCodes(
+                    parameters,
+                    _ffmpegWrapper,
+                    CancellationToken.None,
+                    null,
+                    x => Console.WriteLine(x));
+            }).Wait(); // Image Magic throws if we are on an STA thread, so we have to execute everything on the thread pool and wait...
+            foreach (var barcode in result)
             {
                 try
                 {
-                    if (File.Exists(parameters.SmoothedOutputPath) && arguments.Overwrite == false)
+                    var outputPath = parameters.GeneratorOutputPaths[barcode.Key];
+                    if (File.Exists(outputPath) && arguments.Overwrite == false)
                     {
-                        Console.WriteLine($"WARNING: skipped file {parameters.SmoothedOutputPath} because it already exists.");
+                        // Check once before generating the image, and once just before saving.
+                        Console.WriteLine($"WARNING: skipped saving output file '{outputPath}' because it already exists.");
                     }
                     else
                     {
-                        result[smoothedBarGenerator].Save(parameters.SmoothedOutputPath);
-                        Console.WriteLine($"File {parameters.SmoothedOutputPath} saved successfully!");
+                        barcode.Value.Save(outputPath);
+                        Console.WriteLine($"File '{outputPath}' saved successfully!");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine($"Unable to save the smoothed image: {ex}");
+                    Console.Error.WriteLine($"Unable to save the image: {ex}");
                 }
-
             }
         }
 
@@ -216,7 +196,7 @@ This parameter can be set multiple times.",
 
             Console.WriteLine($@"Movie BarCode Generator {executingAssembly.GetName().Version}
 
-Generate bar codes from movies. (concatenate movie frames in one image)
+Generate bar codes from movies. (concatenated movie frames in one image)
 
 You can provide one input file, or a full directory,
 along with an output file or directory.
@@ -238,6 +218,6 @@ along with an output file or directory.
         public string RawHeight { get; set; } = null;
         public bool UseInputHeight { get; set; } = false;
         public string RawBarWidth { get; set; } = DefaultBarWidth;
-        public bool Smooth { get; set; } = false;
+        public bool Smooth { get; set; } = false; // TODO
     }
 }

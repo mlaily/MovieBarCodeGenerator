@@ -15,9 +15,13 @@ namespace MovieBarCodeGenerator.Core
         public InterpolationSettings Interpolation { get; }
 
         public MagicScalerBarGenerator(
+            string displayName,
+            string fileNameSuffix = "",
             bool average = false,
             InterpolationSettings? interpolation = null)
         {
+            _displayName = displayName;
+            FileNameSuffix = fileNameSuffix;
             Average = average;
             Interpolation = interpolation ?? InterpolationSettings.Average;
         }
@@ -43,6 +47,9 @@ namespace MovieBarCodeGenerator.Core
             $"Magic"
             + $"-Average={Average}"
             + $"-Interpolation={(GetInterpolationName(Interpolation))}";
+        private string _displayName;
+        public string DisplayName => _displayName ?? Name;
+        public string FileNameSuffix { get; }
 
 
         public Image GetBar(BitmapStream source, int barWidth, int barHeight)

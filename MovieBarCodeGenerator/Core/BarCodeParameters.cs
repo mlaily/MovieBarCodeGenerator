@@ -26,17 +26,10 @@ namespace MovieBarCodeGenerator.Core
 {
     public class BarCodeParameters
     {
+        public string InputPath { get; set; }
+        public IDictionary<IBarGenerator, string> GeneratorOutputPaths { get; set; }
         public int Width { get; set; } = 1000;
         public int? Height { get; set; } = null;
         public int BarWidth { get; set; } = 1;
-    }
-
-    public class CompleteBarCodeGenerationParameters
-    {
-        public string InputPath { get; set; }
-        public string OutputPath { get; set; }
-        public string SmoothedOutputPath { get; set; }
-        public bool GenerateSmoothedOutput { get; set; }
-        public BarCodeParameters BarCode { get; set; }
     }
 }

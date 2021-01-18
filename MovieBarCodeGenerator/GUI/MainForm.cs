@@ -17,10 +17,12 @@
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using MovieBarCodeGenerator.Core;
+using PhotoSauce.MagicScaler;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -45,6 +47,8 @@ namespace MovieBarCodeGenerator.GUI
 
         private CancellationTokenSource _cancellationTokenSource;
 
+        private List<BarGeneratorViewModel> _barGenerators;
+
         public MainForm()
         {
             InitializeComponent();
@@ -52,6 +56,34 @@ namespace MovieBarCodeGenerator.GUI
             var executingAssembly = Assembly.GetExecutingAssembly();
             Icon = Icon.ExtractAssociatedIcon(executingAssembly.Location);
             Text += $" - {executingAssembly.GetName().Version}";
+
+            _barGenerators = new List<BarGeneratorViewModel>
+            {
+                new BarGeneratorViewModel(
+                    new MagicScalerBarGenerator("Normal", average: false),
+                    "The default mode to generate barcodes.\r\nIt scales images using a resampling algorithm that takes care of gamma correction and produces correct color averages.",
+                    initialCheckState: true),
+                new BarGeneratorViewModel(
+                    new MagicScalerBarGenerator("Normal (smoothed)", "_smoothed", average: true, InterpolationSettings.CubicSmoother),
+                    "Almost the same as the 'Normal' mode, but vertically smoothed.\r\nIt also uses a 'cubic smoother' resampling algorithm that generates images sharper than the normal algorithm.",
+                    initialCheckState: false),
+                new BarGeneratorViewModel(
+                    GdiBarGenerator.CreateLegacy(average: false),
+                    "The mode used in previous versions.\r\nIt's relatively fast, but the algorithm used to scale images is of poor quality.\r\nThis mode is not recommended, and only here for retro-compatibility.",
+                    initialCheckState: false),
+                new BarGeneratorViewModel(
+                    GdiBarGenerator.CreateLegacy(average: true),
+                    "Same as 'Legacy', but vertically smoothed.",
+                    initialCheckState: false),
+            };
+
+            barGeneratorList.DisplayMember = nameof(BarGeneratorViewModel.DisplayName);
+            barGeneratorList.Items.Clear();
+            foreach (var item in _barGenerators)
+                barGeneratorList.Items.Add(item, isChecked: item.Checked);
+
+            barGeneratorList.SelectedItem = _barGenerators.First(x => x.Checked); // So that the right panel displays something.
+            barGeneratorList.SelectedItem = null; // Unselect so a click on the line will not uncheck the item.
 
             AppendLog(Text);
 
@@ -92,26 +124,39 @@ namespace MovieBarCodeGenerator.GUI
 
             // Validate parameters:
 
-            bool PromptOverwriteExistingOutputFile(string path)
+            bool PromptOverwriteExistingOutputFile(IReadOnlyCollection<string> paths)
             {
                 var promptResult = MessageBox.Show(this,
-                     $"The file '{path}' already exists. Do you want to overwrite it?",
+                     $"The following files already exist: '{string.Join(", ", paths.Select(x => $"'{x}'"))}'. Do you want to overwrite them?",
                      "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 return promptResult == DialogResult.Yes;
             }
 
-            CompleteBarCodeGenerationParameters parameters;
+            var generators =
+                _barGenerators
+                .Where(x => x.Checked)
+                .Select(x => x.Generator)
+                .ToArray();
+
+            if (generators.Any() == false)
+            {
+                TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Error);
+                MessageBox.Show(this, "At least one barcode version must be selected.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            BarCodeParameters parameters;
             try
             {
                 parameters = _barCodeParametersValidator.GetValidatedParameters(
                     rawInputPath: inputPathTextBox.Text,
-                    rawOutputPath: outputPathTextBox.Text,
+                    rawBaseOutputPath: outputPathTextBox.Text,
                     rawBarWidth: barWidthTextBox.Text,
                     rawImageWidth: imageWidthTextBox.Text,
                     rawImageHeight: imageHeightTextBox.Text,
                     useInputHeightForOutput: useInputHeightForOutputCheckBox.Checked,
-                    generateSmoothVersion: smoothCheckBox.Checked,
-                    shouldOverwriteOutput: PromptOverwriteExistingOutputFile);
+                    shouldOverwriteOutputPaths: PromptOverwriteExistingOutputFile,
+                    barGenerators: generators);
             }
             catch (OperationCanceledException)
             {
@@ -127,11 +172,11 @@ namespace MovieBarCodeGenerator.GUI
             }
 
             AppendLog($@"Barcode generation starting...
-Input: {parameters.InputPath}
-Output: {parameters.OutputPath}
-Output width: {parameters.BarCode.Width}
-Output height: {parameters.BarCode.Height}
-Bar width: {parameters.BarCode.BarWidth}");
+Input: '{parameters.InputPath}'
+Output: {string.Join(", ", parameters.GeneratorOutputPaths.Select(x => $"'{x.Value}'"))}
+Output width: {parameters.Width}
+Output height: {parameters.Height}
+Bar width: {parameters.BarWidth}");
 
             // Register progression callback and ready cancellation source:
 
@@ -153,15 +198,6 @@ Bar width: {parameters.BarCode.BarWidth}");
 
             // Actually create the barcode:
 
-            var gdiBarGenerator = GdiBarGenerator.CreateLegacy(false);
-            var smoothedBarGenerator = GdiBarGenerator.CreateLegacy(true);
-
-            var generators = new List<IBarGenerator> { gdiBarGenerator };
-            if (parameters.GenerateSmoothedOutput)
-            {
-                generators.Add(smoothedBarGenerator);
-            }
-
             IReadOnlyDictionary<IBarGenerator, Bitmap> result = null;
             try
             {
@@ -180,13 +216,11 @@ Bar width: {parameters.BarCode.BarWidth}");
                 await Task.Run(() =>
                 {
                     result = _imageProcessor.CreateBarCodes(
-                        parameters.InputPath,
-                        parameters.BarCode,
+                        parameters,
                         _ffmpegWrapper,
                         _cancellationTokenSource.Token,
                         progress,
-                        AppendLog,
-                        generators.ToArray());
+                        AppendLog);
                 }, _cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
@@ -218,33 +252,22 @@ Bar width: {parameters.BarCode.BarWidth}");
 
             // Save the barcode:
 
-            AppendLog("Saving the image...");
+            AppendLog("Saving the images...");
 
             try
             {
-                result[gdiBarGenerator].Save(parameters.OutputPath);
+                foreach (var barcode in result)
+                {
+                    var outputPath = parameters.GeneratorOutputPaths[barcode.Key];
+                    barcode.Value.Save(outputPath);
+                }
             }
             catch (Exception ex)
             {
-                var message = $"Unable to save the image: {ex}";
+                var message = $"Unable to save the images: {ex}";
                 AppendLog(message);
                 TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Error);
                 MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
-            if (parameters.GenerateSmoothedOutput)
-            {
-                try
-                {
-                    result[smoothedBarGenerator].Save(parameters.SmoothedOutputPath);
-                }
-                catch (Exception ex)
-                {
-                    var message = $"Unable to save the smoothed image: {ex}";
-                    AppendLog(message);
-                    TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Error);
-                    MessageBox.Show(this, message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
             }
 
             AppendLog("Barcode generated successfully!");
@@ -359,6 +382,22 @@ Bar width: {parameters.BarCode.BarWidth}");
                 e.Effect = DragDropEffects.Copy;
             }
         }
+
+        private void barGeneratorList_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (barGeneratorList.Items[e.Index] is BarGeneratorViewModel generator)
+            {
+                generator.Checked = e.NewValue == CheckState.Checked ? true : false;
+            }
+        }
+
+        private void barGeneratorList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (barGeneratorList.SelectedItem is BarGeneratorViewModel generator)
+            {
+                generatorInfoBody.Text = $"{generator.DisplayName}\r\n{generator.Details}";
+            }
+        }
     }
 
     public class PercentageProgressHandler : IProgress<double>
@@ -370,5 +409,21 @@ Bar width: {parameters.BarCode.BarWidth}");
             _handler = handler;
         }
         public void Report(double value) => _handler(value);
+    }
+
+    public class BarGeneratorViewModel
+    {
+        public IBarGenerator Generator { get; }
+        public string Details { get; }
+
+        public bool Checked { get; set; }
+        public string DisplayName => Generator.DisplayName;
+
+        public BarGeneratorViewModel(IBarGenerator generator, string details, bool initialCheckState)
+        {
+            Generator = generator;
+            Details = details;
+            Checked = initialCheckState;
+        }
     }
 }
