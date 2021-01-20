@@ -1,4 +1,4 @@
-﻿//Copyright 2011-2018 Melvyn Laily
+﻿//Copyright 2011-2021 Melvyn Laily
 //https://zerowidthjoiner.net
 
 //This file is part of MovieBarCodeGenerator.
