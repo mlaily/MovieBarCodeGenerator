@@ -18,6 +18,7 @@
 
 using Mono.Options;
 using MovieBarCodeGenerator.Core;
+using PhotoSauce.MagicScaler;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -82,10 +83,21 @@ This parameter can be set multiple times.",
                 $"Width of each bar in the output image. Default: {RawArguments.DefaultBarWidth}",
                 x => arguments.RawBarWidth = x);
 
-            // TODO
-            //options.Add("s|smooth",
-            //    "Also generate a smooth version of the output, suffixed with '_smoothed'.",
-            //    x => arguments.Smooth = true);
+            options.Add("normal",
+                "Generate a normal barcode.\nDefaults to True.\n(Use --normal- to set it to False)",
+                x => arguments.GenerateNormal = x != null);
+
+            options.Add("normal-smoothed",
+                "Generate a normal smoothed barcode.\nDefaults to False.",
+                x => arguments.GenerateNormalSmoothed = x != null);
+
+            options.Add("legacy",
+                "Generate a legacy barcode.\nDefaults to False.",
+                x => arguments.GenerateLegacy = x != null);
+
+            options.Add("legacy-smoothed",
+                "Generate a legacy smoothed barcode.\nDefaults to False.",
+                x => arguments.GenerateLegacySmoothed = x != null);
 
             try
             {
@@ -126,8 +138,25 @@ This parameter can be set multiple times.",
         {
             Console.WriteLine($"Processing file '{arguments.RawInput}':");
 
-            // TODO
-            var generators = new[] { new MagicScalerBarGenerator("Normal") };
+            var generators = new List<IBarGenerator>();
+
+            if (arguments.GenerateNormal)
+                generators.Add(new MagicScalerBarGenerator("Normal"));
+
+            if (arguments.GenerateNormalSmoothed)
+                generators.Add(new MagicScalerBarGenerator("Normal (smoothed)", "_smoothed", average: true, interpolation: InterpolationSettings.CubicSmoother));
+
+            if (arguments.GenerateLegacy)
+                generators.Add(GdiBarGenerator.CreateLegacy(average: false));
+
+            if (arguments.GenerateLegacySmoothed)
+                generators.Add(GdiBarGenerator.CreateLegacy(average: true));
+
+            if (!generators.Any())
+            {
+                Console.WriteLine("No generator.");
+                return;
+            }
 
             IReadOnlyCollection<string> existingOutputs = Array.Empty<string>();
             BarCodeParameters parameters;
@@ -167,6 +196,7 @@ This parameter can be set multiple times.",
                     null,
                     x => Console.WriteLine(x));
             }).Wait(); // Image Magic throws if we are on an STA thread, so we have to execute everything on the thread pool and wait...
+
             foreach (var barcode in result)
             {
                 try
@@ -218,6 +248,10 @@ along with an output file or directory.
         public string RawHeight { get; set; } = null;
         public bool UseInputHeight { get; set; } = false;
         public string RawBarWidth { get; set; } = DefaultBarWidth;
-        public bool Smooth { get; set; } = false; // TODO
+
+        public bool GenerateNormal { get; set; } = true;
+        public bool GenerateNormalSmoothed { get; set; }
+        public bool GenerateLegacy { get; set; }
+        public bool GenerateLegacySmoothed { get; set; }
     }
 }
