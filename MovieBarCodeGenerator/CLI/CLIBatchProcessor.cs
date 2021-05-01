@@ -35,7 +35,7 @@ namespace MovieBarCodeGenerator.CLI
     public class CLIBatchProcessor
     {
         private BarCodeParametersValidator _barCodeParametersValidator = new BarCodeParametersValidator();
-        private FfmpegWrapper _ffmpegWrapper = new FfmpegWrapper("ffmpeg.exe");
+        private ImageProvider _imageProvider = new ImageProvider();
         private ImageStreamProcessor _imageProcessor = new ImageStreamProcessor();
 
         public void Process(string[] args)
@@ -168,7 +168,6 @@ This parameter can be set multiple times.",
                     rawBarWidth: arguments.RawBarWidth,
                     rawImageWidth: arguments.RawWidth,
                     rawImageHeight: arguments.RawHeight,
-                    useInputHeightForOutput: arguments.UseInputHeight,
                     // Choosing whether to overwrite or not is done after validating parameters, not here
                     shouldOverwriteOutputPaths: x => { existingOutputs = x; return true; },
                     generators);
@@ -191,7 +190,7 @@ This parameter can be set multiple times.",
             {
                 result = _imageProcessor.CreateBarCodes(
                     parameters,
-                    _ffmpegWrapper,
+                    _imageProvider,
                     CancellationToken.None,
                     null,
                     x => Console.WriteLine(x));

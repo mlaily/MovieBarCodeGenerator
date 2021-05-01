@@ -33,7 +33,6 @@ namespace MovieBarCodeGenerator.Core
             string rawBarWidth,
             string rawImageWidth,
             string rawImageHeight,
-            bool useInputHeightForOutput,
             Func<IReadOnlyCollection<string>, bool> shouldOverwriteOutputPaths,
             IEnumerable<IBarGenerator> barGenerators)
         {
@@ -84,16 +83,13 @@ namespace MovieBarCodeGenerator.Core
             }
 
             int? imageHeight = null;
-            if (!useInputHeightForOutput)
+            if (int.TryParse(rawImageHeight, out var nonNullableImageHeight) && nonNullableImageHeight > 0)
             {
-                if (int.TryParse(rawImageHeight, out var nonNullableImageHeight) && nonNullableImageHeight > 0)
-                {
-                    imageHeight = nonNullableImageHeight;
-                }
-                else
-                {
-                    throw new ParameterValidationException("Invalid output height.");
-                }
+                imageHeight = nonNullableImageHeight;
+            }
+            else
+            {
+                throw new ParameterValidationException("Invalid output height.");
             }
 
             return new BarCodeParameters

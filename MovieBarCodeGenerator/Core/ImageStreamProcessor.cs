@@ -20,6 +20,7 @@ using PhotoSauce.MagicScaler;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -32,20 +33,20 @@ namespace MovieBarCodeGenerator.Core
         string Name { get; }
         string DisplayName { get; }
         string FileNameSuffix { get; }
-        Image GetBar(BitmapStream source, int barWidth, int barHeight);
+        Image GetBar(FileStream source, int barWidth, int barHeight);
     }
 
     public class ImageStreamProcessor
     {
         public IReadOnlyDictionary<IBarGenerator, Bitmap> CreateBarCodes(
             BarCodeParameters parameters,
-            FfmpegWrapper ffmpeg,
+            ImageProvider imageProvider,
             CancellationToken cancellationToken,
             IProgress<double> progress = null,
             Action<string> log = null)
         {
             var barCount = (int)Math.Round((double)parameters.Width / parameters.BarWidth);
-            var bitmapStreamSource = ffmpeg.GetImagesFromMedia(parameters.InputPath, barCount, cancellationToken, log);
+            var bitmapStreamSource = imageProvider.GetImagesFromMedia(parameters.InputPath, barCount, cancellationToken, log);
 
             var barGenerators = parameters.GeneratorOutputPaths.Keys.ToArray();
             Bitmap[] finalBitmaps = new Bitmap[barGenerators.Length];

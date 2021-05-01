@@ -16,6 +16,7 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+using Microsoft.WindowsAPICodePack.Dialogs;
 using MovieBarCodeGenerator.Core;
 using PhotoSauce.MagicScaler;
 using System;
@@ -39,9 +40,9 @@ namespace MovieBarCodeGenerator.GUI
         private const string GenerateButtonText = "Generate!";
         private const string CancelButtonText = "Cancel";
 
-        private OpenFileDialog _openFileDialog;
+        private CommonOpenFileDialog _openFileDialog;
         private SaveFileDialog _saveFileDialog;
-        private FfmpegWrapper _ffmpegWrapper;
+        private ImageProvider _imageProvider;
         private ImageStreamProcessor _imageProcessor;
         private BarCodeParametersValidator _barCodeParametersValidator;
 
@@ -55,7 +56,7 @@ namespace MovieBarCodeGenerator.GUI
 
             var executingAssembly = Assembly.GetExecutingAssembly();
             Icon = Icon.ExtractAssociatedIcon(executingAssembly.Location);
-            Text += $" - {executingAssembly.GetName().Version}";
+            Text += $" - {executingAssembly.GetName().Version}-beta - This version uses an image folder instead of a video!";
 
             _barGenerators = new List<BarGeneratorViewModel>
             {
@@ -87,10 +88,11 @@ namespace MovieBarCodeGenerator.GUI
 
             AppendLog(Text);
 
-            _openFileDialog = new OpenFileDialog()
+            _openFileDialog = new CommonOpenFileDialog()
             {
-                CheckFileExists = true,
-                CheckPathExists = true,
+                EnsureFileExists = true,
+                EnsurePathExists = true,
+                IsFolderPicker = true,
             };
 
             _saveFileDialog = new SaveFileDialog()
@@ -101,11 +103,10 @@ namespace MovieBarCodeGenerator.GUI
                 OverwritePrompt = true,
             };
 
-            _ffmpegWrapper = new FfmpegWrapper("ffmpeg.exe");
+            _imageProvider = new ImageProvider();
             _imageProcessor = new ImageStreamProcessor();
             _barCodeParametersValidator = new BarCodeParametersValidator();
 
-            useInputHeightForOutputCheckBox.Checked = true;
             generateButton.Text = GenerateButtonText;
         }
 
@@ -154,7 +155,6 @@ namespace MovieBarCodeGenerator.GUI
                     rawBarWidth: barWidthTextBox.Text,
                     rawImageWidth: imageWidthTextBox.Text,
                     rawImageHeight: imageHeightTextBox.Text,
-                    useInputHeightForOutput: useInputHeightForOutputCheckBox.Checked,
                     shouldOverwriteOutputPaths: PromptOverwriteExistingOutputFile,
                     barGenerators: generators);
             }
@@ -217,7 +217,7 @@ Bar width: {parameters.BarWidth}");
                 {
                     result = _imageProcessor.CreateBarCodes(
                         parameters,
-                        _ffmpegWrapper,
+                        _imageProvider,
                         _cancellationTokenSource.Token,
                         progress,
                         AppendLog);
@@ -276,7 +276,7 @@ Bar width: {parameters.BarWidth}");
 
         private void browseInputPathButton_Click(object sender, EventArgs e)
         {
-            if (_openFileDialog.ShowDialog(owner: this) == DialogResult.OK)
+            if (_openFileDialog.ShowDialog(this.Handle) == CommonFileDialogResult.Ok)
             {
                 inputPathTextBox.Text = _openFileDialog.FileName;
             }
@@ -288,11 +288,6 @@ Bar width: {parameters.BarWidth}");
             {
                 outputPathTextBox.Text = _saveFileDialog.FileName;
             }
-        }
-
-        private void useInputHeightForOutputCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            imageHeightTextBox.ReadOnly = useInputHeightForOutputCheckBox.Checked;
         }
 
         private void imageWidthTextBox_KeyUp(object sender, KeyEventArgs e)

@@ -57,7 +57,7 @@ namespace MovieBarCodeGenerator.Tests
         {
             Assert.Inconclusive("Uncomment me to run the test");
 
-            var ffmpegWrapper = new FfmpegWrapper(FfmpegExecutablePath);
+            var ffmpegWrapper = new ImageProvider();
             var streamProcessor = new ImageStreamProcessor();
 
             var allGenerators = new List<IBarGenerator>();

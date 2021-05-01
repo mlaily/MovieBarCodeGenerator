@@ -70,7 +70,7 @@ namespace MovieBarCodeGenerator.Core
         public string FileNameSuffix { get; }
 
 
-        public Image GetBar(BitmapStream source, int barWidth, int barHeight)
+        public Image GetBar(FileStream source, int barWidth, int barHeight)
         {
             ProcessImageSettings GetSettingsBase()
                 => new ProcessImageSettings

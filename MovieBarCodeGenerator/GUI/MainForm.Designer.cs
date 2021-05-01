@@ -46,7 +46,6 @@
             this.barWidthTextBox = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.barCountTextBox = new System.Windows.Forms.TextBox();
-            this.useInputHeightForOutputCheckBox = new System.Windows.Forms.CheckBox();
             this.label4 = new System.Windows.Forms.Label();
             this.imageHeightTextBox = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
@@ -101,7 +100,7 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(87, 13);
             this.label1.TabIndex = 3;
-            this.label1.Text = "Input video path:";
+            this.label1.Text = "Input image folder path:";
             // 
             // groupBox1
             // 
@@ -165,7 +164,6 @@
             this.groupBox2.Controls.Add(this.barWidthTextBox);
             this.groupBox2.Controls.Add(this.label5);
             this.groupBox2.Controls.Add(this.barCountTextBox);
-            this.groupBox2.Controls.Add(this.useInputHeightForOutputCheckBox);
             this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Controls.Add(this.imageHeightTextBox);
             this.groupBox2.Controls.Add(this.label3);
@@ -255,17 +253,6 @@
             this.barCountTextBox.Text = "1000";
             this.barCountTextBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.barCountTextBox_KeyUp);
             // 
-            // useInputHeightForOutputCheckBox
-            // 
-            this.useInputHeightForOutputCheckBox.AutoSize = true;
-            this.useInputHeightForOutputCheckBox.Location = new System.Drawing.Point(6, 63);
-            this.useInputHeightForOutputCheckBox.Name = "useInputHeightForOutputCheckBox";
-            this.useInputHeightForOutputCheckBox.Size = new System.Drawing.Size(172, 17);
-            this.useInputHeightForOutputCheckBox.TabIndex = 8;
-            this.useInputHeightForOutputCheckBox.Text = "Same height as the input video";
-            this.useInputHeightForOutputCheckBox.UseVisualStyleBackColor = true;
-            this.useInputHeightForOutputCheckBox.CheckedChanged += new System.EventHandler(this.useInputHeightForOutputCheckBox_CheckedChanged);
-            // 
             // label4
             // 
             this.label4.AutoSize = true;
@@ -281,6 +268,7 @@
             this.imageHeightTextBox.Name = "imageHeightTextBox";
             this.imageHeightTextBox.Size = new System.Drawing.Size(55, 20);
             this.imageHeightTextBox.TabIndex = 7;
+            this.imageHeightTextBox.Text = "750";
             // 
             // label3
             // 
@@ -392,7 +380,6 @@
         private System.Windows.Forms.TextBox barWidthTextBox;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox barCountTextBox;
-        private System.Windows.Forms.CheckBox useInputHeightForOutputCheckBox;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox imageHeightTextBox;
         private System.Windows.Forms.Label label3;

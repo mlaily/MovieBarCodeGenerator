@@ -51,17 +51,6 @@ namespace MovieBarCodeGenerator.Tests
         }
 
         [Test]
-        public void FfmpegWrapper_GetMediaDuration_Returns_Correct_Value()
-        {
-            CreateTestVideoIfNecessary();
-            var ffmpegWrapper = new FfmpegWrapper(FfmpegExecutablePath);
-
-            var duration = ffmpegWrapper.GetMediaDuration(TestVideoFileName, CancellationToken.None);
-
-            Assert.AreEqual(TimeSpan.FromSeconds(TestVideoDuration), duration);
-        }
-
-        [Test]
         [TestCase(1)]
         [TestCase(2)]
         [TestCase(3)]
@@ -70,7 +59,7 @@ namespace MovieBarCodeGenerator.Tests
         public async Task FfmpegWrapper_GetImagesFromMedia_Returns_Expected_Values(int requestedFrameCount)
         {
             CreateTestVideoIfNecessary();
-            var ffmpegWrapper = new FfmpegWrapper(FfmpegExecutablePath);
+            var ffmpegWrapper = new ImageProvider();
 
             var images = ffmpegWrapper.GetImagesFromMedia(
                 TestVideoFileName,
