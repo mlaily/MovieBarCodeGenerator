@@ -52,6 +52,8 @@ namespace MovieBarCodeGenerator.Core
                     // Only redirect a standard stream if you read it!
                     RedirectStandardOutput = true,
                     RedirectStandardError = redirectError,
+                    StandardErrorEncoding = redirectError ? Encoding.UTF8 : null, // Setting encoding crashes if not redirected. Default is null.
+                    StandardOutputEncoding = Encoding.UTF8,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 });
@@ -75,7 +77,7 @@ namespace MovieBarCodeGenerator.Core
             }
         }
 
-        public TimeSpan GetMediaDuration(string inputPath, CancellationToken cancellationToken, Action<string> log = null)
+        public MediaInfo GetMediaInfo(string inputPath, CancellationToken cancellationToken, Action<string> log = null)
         {
             log?.Invoke("Getting input duration from FFmpeg...");
 
@@ -95,29 +97,55 @@ namespace MovieBarCodeGenerator.Core
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var match = Regex.Match(output, @"Duration: (.*?),");
-                if (match.Success)
+                var result = new MediaInfo();
+
                 {
-                    var result = TimeSpan.Parse(match.Groups[1].Value);
-                    return result;
+                    var match = Regex.Match(output, @"Duration: (.*?),");
+                    if (match.Success)
+                    {
+                        result.Duration = TimeSpan.Parse(match.Groups[1].Value);
+                    }
+                    else
+                    {
+                        throw new FormatException("Could not parse media duration.");
+                    }
                 }
-                else
                 {
-                    throw new FormatException();
+                    // TODO: improve HDR detection with other supported values (see https://github.com/jellyfin/jellyfin/blob/b96dbbf553820861eab9d1a453adcc8ce8a9ef05/MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs#L4186)
+                    var match = Regex.Match(output, @"Video: .*?yuv420p10le");
+                    result.IsHDR = match.Success;
                 }
+
+                return result;
             }
         }
 
-        public IEnumerable<BitmapStream> GetImagesFromMedia(string inputPath, int frameCount, CancellationToken cancellationToken, Action<string> log = null)
+        public IEnumerable<BitmapStream> GetImagesFromMedia(string inputPath, int frameCount, CancellationToken cancellationToken, Action<string> log = null, bool autoToneMapHDR = true)
         {
-            var length = GetMediaDuration(inputPath, cancellationToken, log);
+            var mediaInfo = GetMediaInfo(inputPath, cancellationToken, log);
 
             log?.Invoke("Reading images from FFmpeg...");
 
-            var fps = frameCount / length.TotalSeconds;
+            var fps = frameCount / mediaInfo.Duration.TotalSeconds;
+            var fpsFilter = $"fps={fps.ToInvariantString()}";
+
+            // Note: tone mapping algorithms have been tested (*cough* *cough* on the Interstellar movie only =°)
+            // and compared to the SDR reference barcode, hable seems to give the closest result.
+            // Warning: this is very slow!
+            var hdrToSdrFilter = "zscale=transfer=linear:npl=100,format=gbrpf32le,zscale=primaries=bt709,tonemap=tonemap=hable,zscale=transfer=bt709:matrix=bt709:range=tv,format=yuv420p";
+
+            var vfilters = new List<string> { fpsFilter };
+
+            if (mediaInfo.IsHDR && autoToneMapHDR)
+            {
+                log?.Invoke("HDR video detected. Adding tone mapping filter.");
+                vfilters.Add(hdrToSdrFilter);
+            }
 
             // Output a raw stream of bitmap images taken at the specified frequency
-            var args = $"-i \"{inputPath}\" -vf fps={fps.ToInvariantString()} -c:v bmp -f rawvideo -an -";
+            var args = $"-i \"{inputPath}\" -vf \"{string.Join(",", vfilters)}\" -c:v bmp -f rawvideo -an -";
+
+            log?.Invoke($"FFmpeg arguments: {args}");
 
             var process = StartFfmpegInstance(args, redirectError: log != null);
 
@@ -141,5 +169,11 @@ namespace MovieBarCodeGenerator.Core
 
             return GetLazyStream();
         }
+    }
+
+    public class MediaInfo
+    {
+        public TimeSpan Duration { get; internal set; }
+        public bool IsHDR { get; internal set; }
     }
 }

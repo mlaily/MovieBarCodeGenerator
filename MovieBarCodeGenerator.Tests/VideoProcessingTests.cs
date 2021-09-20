@@ -56,9 +56,9 @@ namespace MovieBarCodeGenerator.Tests
             CreateTestVideoIfNecessary();
             var ffmpegWrapper = new FfmpegWrapper(FfmpegExecutablePath);
 
-            var duration = ffmpegWrapper.GetMediaDuration(TestVideoFileName, CancellationToken.None);
+            var mediaInfo = ffmpegWrapper.GetMediaInfo(TestVideoFileName, CancellationToken.None);
 
-            Assert.AreEqual(TimeSpan.FromSeconds(TestVideoDuration), duration);
+            Assert.AreEqual(TimeSpan.FromSeconds(TestVideoDuration), mediaInfo.Duration);
         }
 
         [Test]
