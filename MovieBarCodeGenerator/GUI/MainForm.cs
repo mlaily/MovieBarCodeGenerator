@@ -69,7 +69,7 @@ namespace MovieBarCodeGenerator.GUI
                     initialCheckState: false),
                 new BarGeneratorViewModel(
                     GdiBarGenerator.CreateLegacy(average: false),
-                    "The mode used in previous versions.\r\nIt's relatively fast, but the algorithm used to scale images is of poor quality.\r\nThis mode is not recommended, and only here for retro-compatibility.",
+                    "The mode used in previous versions.\r\nIt's relatively fast, but the algorithm used to scale images is of poor quality.\r\nThis mode is not recommended, and only here for backward-compatibility.",
                     initialCheckState: false),
                 new BarGeneratorViewModel(
                     GdiBarGenerator.CreateLegacy(average: true),
@@ -233,7 +233,7 @@ Bar width: {parameters.BarWidth}");
             {
                 AppendLog("Error: " + ex.ToString());
                 TaskbarProgress.SetState(Handle, TaskbarProgress.TaskbarStates.Error);
-                MessageBox.Show(this, "Sorry, something went wrong. See the log for more info.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "Sorry, something went wrong. See the log for more information.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             finally
