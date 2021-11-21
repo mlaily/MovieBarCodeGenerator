@@ -29,9 +29,9 @@ namespace MovieBarCodeGenerator.CLI;
 
 public class CLIBatchProcessor
 {
-    private BarCodeParametersValidator _barCodeParametersValidator = new BarCodeParametersValidator();
-    private FfmpegWrapper _ffmpegWrapper = new FfmpegWrapper("ffmpeg.exe");
-    private ImageStreamProcessor _imageProcessor = new ImageStreamProcessor();
+    private readonly BarCodeParametersValidator _barCodeParametersValidator = new();
+    private readonly FfmpegWrapper _ffmpegWrapper = new("ffmpeg.exe");
+    private readonly ImageStreamProcessor _imageProcessor = new();
 
     public void Process(string[] args)
     {

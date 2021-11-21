@@ -1,4 +1,4 @@
-﻿//Copyright 2011-2018 Melvyn Laily
+//Copyright 2011-2018 Melvyn Laily
 //https://zerowidthjoiner.net
 
 //This file is part of MovieBarCodeGenerator.
@@ -32,15 +32,15 @@ public partial class MainForm : Form
     private const string GenerateButtonText = "Generate!";
     private const string CancelButtonText = "Cancel";
 
-    private OpenFileDialog _openFileDialog;
-    private SaveFileDialog _saveFileDialog;
-    private FfmpegWrapper _ffmpegWrapper;
-    private ImageStreamProcessor _imageProcessor;
-    private BarCodeParametersValidator _barCodeParametersValidator;
+    private readonly OpenFileDialog _openFileDialog;
+    private readonly SaveFileDialog _saveFileDialog;
+    private readonly FfmpegWrapper _ffmpegWrapper;
+    private readonly ImageStreamProcessor _imageProcessor;
+    private readonly BarCodeParametersValidator _barCodeParametersValidator;
 
     private CancellationTokenSource _cancellationTokenSource;
 
-    private List<BarGeneratorViewModel> _barGenerators;
+    private readonly List<BarGeneratorViewModel> _barGenerators;
 
     public MainForm()
     {
@@ -380,7 +380,7 @@ Bar width: {parameters.BarWidth}");
     {
         if (barGeneratorList.Items[e.Index] is BarGeneratorViewModel generator)
         {
-            generator.Checked = e.NewValue == CheckState.Checked ? true : false;
+            generator.Checked = e.NewValue == CheckState.Checked;
         }
     }
 

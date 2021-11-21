@@ -1,4 +1,4 @@
-﻿//Copyright 2011-2021 Melvyn Laily
+//Copyright 2011-2021 Melvyn Laily
 //https://zerowidthjoiner.net
 
 //This file is part of MovieBarCodeGenerator.
@@ -71,7 +71,7 @@ public class BitmapStream : Stream
         }
     }
 
-    private MemoryStream _dataStream;
+    private readonly MemoryStream _dataStream;
     public BitmapStream(MemoryStream dataStream)
     {
         _dataStream = dataStream;

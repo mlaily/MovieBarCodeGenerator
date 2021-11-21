@@ -1,4 +1,4 @@
-﻿//Copyright 2011-2021 Melvyn Laily
+//Copyright 2011-2021 Melvyn Laily
 //https://zerowidthjoiner.net
 
 //This file is part of MovieBarCodeGenerator.
@@ -54,7 +54,7 @@ public class GdiBarGenerator : IBarGenerator
     public ScalingMode ScalingMode { get; }
 
     public static GdiBarGenerator CreateLegacy(bool average)
-        => new GdiBarGenerator(
+        => new(
             average ? "Legacy (smoothed)" : "Legacy",
             average ? "_legacy_smoothed" : "_legacy",
             average ? GdiAverage.TwoPasses : GdiAverage.No,
@@ -80,7 +80,7 @@ public class GdiBarGenerator : IBarGenerator
         + $"-Average={Average}"
         + $"-ScalingMode={ScalingMode}"
         + $"-InterpolationMode={InterpolationMode}";
-    private string _displayName;
+    private readonly string _displayName;
     public string DisplayName => _displayName ?? Name;
     public string FileNameSuffix { get; }
 
@@ -119,21 +119,19 @@ public class GdiBarGenerator : IBarGenerator
         destImage.SetResolution(source.HorizontalResolution, source.VerticalResolution);
 
         using (var g = Graphics.FromImage(destImage))
+        using (var attributes = new ImageAttributes())
         {
-            using (var attributes = new ImageAttributes())
+            if (useSaneDefaults)
             {
-                if (useSaneDefaults)
-                {
-                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                    g.InterpolationMode = InterpolationMode;
-                    g.CompositingMode = CompositingMode.SourceCopy;
-                    g.CompositingQuality = CompositingQuality.HighSpeed; // Has no effect for our usage (no transparence)
-                    g.SmoothingMode = SmoothingMode.None; // Useless too since we are not dealing with vector graphics
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.InterpolationMode = InterpolationMode;
+                g.CompositingMode = CompositingMode.SourceCopy;
+                g.CompositingQuality = CompositingQuality.HighSpeed; // Has no effect for our usage (no transparence)
+                g.SmoothingMode = SmoothingMode.None; // Useless too since we are not dealing with vector graphics
 
-                    attributes.SetWrapMode(WrapMode.TileFlipXY);
-                }
-                g.DrawImage(source, destRect, 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attributes);
+                attributes.SetWrapMode(WrapMode.TileFlipXY);
             }
+            g.DrawImage(source, destRect, 0, 0, source.Width, source.Height, GraphicsUnit.Pixel, attributes);
         }
 
         return destImage;

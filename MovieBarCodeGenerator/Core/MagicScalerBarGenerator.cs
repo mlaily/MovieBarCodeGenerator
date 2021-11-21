@@ -1,4 +1,4 @@
-﻿//Copyright 2011-2021 Melvyn Laily
+//Copyright 2011-2021 Melvyn Laily
 //https://zerowidthjoiner.net
 
 //This file is part of MovieBarCodeGenerator.
@@ -39,7 +39,7 @@ public class MagicScalerBarGenerator : IBarGenerator
         Interpolation = interpolation ?? InterpolationSettings.Average;
     }
 
-    private static Dictionary<InterpolationSettings, string> _defaultInterpolations = new Dictionary<InterpolationSettings, string>
+    private static readonly Dictionary<InterpolationSettings, string> _defaultInterpolations = new()
     {
         [InterpolationSettings.Average] = nameof(InterpolationSettings.Average),
         [InterpolationSettings.CatmullRom] = nameof(InterpolationSettings.CatmullRom),
@@ -60,7 +60,7 @@ public class MagicScalerBarGenerator : IBarGenerator
         $"Magic"
         + $"-Average={Average}"
         + $"-Interpolation={(GetInterpolationName(Interpolation))}";
-    private string _displayName;
+    private readonly string _displayName;
     public string DisplayName => _displayName ?? Name;
     public string FileNameSuffix { get; }
 
@@ -68,7 +68,7 @@ public class MagicScalerBarGenerator : IBarGenerator
     public Image GetBar(BitmapStream source, int barWidth, int barHeight)
     {
         ProcessImageSettings GetSettingsBase()
-            => new ProcessImageSettings
+            => new()
             {
                 ResizeMode = CropScaleMode.Stretch,
                 Sharpen = false,
