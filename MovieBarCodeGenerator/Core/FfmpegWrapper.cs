@@ -132,6 +132,7 @@ namespace MovieBarCodeGenerator.Core
             // Note: tone mapping algorithms have been tested (*cough* *cough* on the Interstellar movie only =°)
             // and compared to the SDR reference barcode, hable seems to give the closest result.
             // Warning: this is very slow!
+            // https://web.archive.org/web/20190722004804/https://stevens.li/guides/video/converting-hdr-to-sdr-with-ffmpeg/
             var hdrToSdrFilter = "zscale=transfer=linear:npl=100,format=gbrpf32le,zscale=primaries=bt709,tonemap=tonemap=hable,zscale=transfer=bt709:matrix=bt709:range=tv,format=yuv420p";
 
             var vfilters = new List<string> { fpsFilter };
