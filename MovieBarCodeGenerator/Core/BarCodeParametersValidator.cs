@@ -16,112 +16,106 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MovieBarCodeGenerator.Core
+namespace MovieBarCodeGenerator.Core;
+
+public class BarCodeParametersValidator
 {
-    public class BarCodeParametersValidator
+    public BarCodeParameters GetValidatedParameters(
+        string rawInputPath,
+        string rawBaseOutputPath,
+        string rawBarWidth,
+        string rawImageWidth,
+        string rawImageHeight,
+        bool useInputHeightForOutput,
+        Func<IReadOnlyCollection<string>, bool> shouldOverwriteOutputPaths,
+        IEnumerable<IBarGenerator> barGenerators)
     {
-        public BarCodeParameters GetValidatedParameters(
-            string rawInputPath,
-            string rawBaseOutputPath,
-            string rawBarWidth,
-            string rawImageWidth,
-            string rawImageHeight,
-            bool useInputHeightForOutput,
-            Func<IReadOnlyCollection<string>, bool> shouldOverwriteOutputPaths,
-            IEnumerable<IBarGenerator> barGenerators)
+        var inputPath = rawInputPath.Trim(new[] { '"' });
+
+        (string Path, bool AlreadyExists) ValidateOutputPath(string initialPath)
         {
-            var inputPath = rawInputPath.Trim(new[] { '"' });
-
-            (string Path, bool AlreadyExists) ValidateOutputPath(string initialPath)
+            string path = initialPath;
+            if (string.IsNullOrWhiteSpace(path))
             {
-                string path = initialPath;
-                if (string.IsNullOrWhiteSpace(path))
-                {
-                    path = $"{GetSafeFileNameWithoutExtension(inputPath)}.png";
-                }
-
-                if (!Path.HasExtension(path))
-                {
-                    path += ".png";
-                }
-
-                if (path.Any(x => Path.GetInvalidPathChars().Contains(x)))
-                {
-                    throw new ParameterValidationException("The output path is invalid.");
-                }
-
-                return (path, File.Exists(path));
+                path = $"{GetSafeFileNameWithoutExtension(inputPath)}.png";
             }
 
-            var baseOutputPath = ValidateOutputPath(rawBaseOutputPath?.Trim(new[] { '"' })).Path;
-
-            var outputPaths = from generator in barGenerators
-                              let name = $"{GetSafeFileNameWithoutExtension(baseOutputPath)}{generator.FileNameSuffix}{Path.GetExtension(baseOutputPath)}"
-                              let path = Path.Combine(Path.GetDirectoryName(baseOutputPath), name)
-                              select new { generator, ValidatedPath = ValidateOutputPath(path) };
-
-            if (outputPaths.Any(x => x.ValidatedPath.AlreadyExists)
-                && shouldOverwriteOutputPaths(outputPaths.Where(x => x.ValidatedPath.AlreadyExists).Select(x => x.ValidatedPath.Path).ToList()) == false)
+            if (!Path.HasExtension(path))
             {
-                throw new OperationCanceledException("At least one output file already exists.");
+                path += ".png";
             }
 
-            if (!int.TryParse(rawBarWidth, out var barWidth) || barWidth <= 0)
+            if (path.Any(x => Path.GetInvalidPathChars().Contains(x)))
             {
-                throw new ParameterValidationException("Invalid bar width.");
+                throw new ParameterValidationException("The output path is invalid.");
             }
 
-            if (!int.TryParse(rawImageWidth, out var imageWidth) || imageWidth <= 0)
-            {
-                throw new ParameterValidationException("Invalid output width.");
-            }
-
-            int? imageHeight = null;
-            if (!useInputHeightForOutput)
-            {
-                if (int.TryParse(rawImageHeight, out var nonNullableImageHeight) && nonNullableImageHeight > 0)
-                {
-                    imageHeight = nonNullableImageHeight;
-                }
-                else
-                {
-                    throw new ParameterValidationException("Invalid output height.");
-                }
-            }
-
-            return new BarCodeParameters
-            {
-                InputPath = inputPath,
-                GeneratorOutputPaths = outputPaths.ToDictionary(x => x.generator, x => x.ValidatedPath.Path),
-                BarWidth = barWidth,
-                Width = imageWidth,
-                Height = imageHeight,
-            };
+            return (path, File.Exists(path));
         }
 
-        private string GetSafeFileNameWithoutExtension(string input)
+        var baseOutputPath = ValidateOutputPath(rawBaseOutputPath?.Trim(new[] { '"' })).Path;
+
+        var outputPaths = from generator in barGenerators
+                          let name = $"{GetSafeFileNameWithoutExtension(baseOutputPath)}{generator.FileNameSuffix}{Path.GetExtension(baseOutputPath)}"
+                          let path = Path.Combine(Path.GetDirectoryName(baseOutputPath), name)
+                          select new { generator, ValidatedPath = ValidateOutputPath(path) };
+
+        if (outputPaths.Any(x => x.ValidatedPath.AlreadyExists)
+            && shouldOverwriteOutputPaths(outputPaths.Where(x => x.ValidatedPath.AlreadyExists).Select(x => x.ValidatedPath.Path).ToList()) == false)
         {
-            try
+            throw new OperationCanceledException("At least one output file already exists.");
+        }
+
+        if (!int.TryParse(rawBarWidth, out var barWidth) || barWidth <= 0)
+        {
+            throw new ParameterValidationException("Invalid bar width.");
+        }
+
+        if (!int.TryParse(rawImageWidth, out var imageWidth) || imageWidth <= 0)
+        {
+            throw new ParameterValidationException("Invalid output width.");
+        }
+
+        int? imageHeight = null;
+        if (!useInputHeightForOutput)
+        {
+            if (int.TryParse(rawImageHeight, out var nonNullableImageHeight) && nonNullableImageHeight > 0)
             {
-                return Path.GetFileNameWithoutExtension(input);
+                imageHeight = nonNullableImageHeight;
             }
-            catch
+            else
             {
-                // TODO: this implementation could largely be improved...
-                return "output";
+                throw new ParameterValidationException("Invalid output height.");
             }
         }
+
+        return new BarCodeParameters
+        {
+            InputPath = inputPath,
+            GeneratorOutputPaths = outputPaths.ToDictionary(x => x.generator, x => x.ValidatedPath.Path),
+            BarWidth = barWidth,
+            Width = imageWidth,
+            Height = imageHeight,
+        };
     }
 
-    public class ParameterValidationException : Exception
+    private string GetSafeFileNameWithoutExtension(string input)
     {
-        public ParameterValidationException(string message) : base(message) { }
+        try
+        {
+            return Path.GetFileNameWithoutExtension(input);
+        }
+        catch
+        {
+            // TODO: this implementation could largely be improved...
+            return "output";
+        }
     }
+}
+
+public class ParameterValidationException : Exception
+{
+    public ParameterValidationException(string message) : base(message) { }
 }

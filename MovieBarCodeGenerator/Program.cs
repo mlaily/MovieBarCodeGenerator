@@ -1,39 +1,33 @@
 ﻿using MovieBarCodeGenerator.CLI;
 using MovieBarCodeGenerator.GUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
-namespace MovieBarCodeGenerator
+namespace MovieBarCodeGenerator;
+
+static class Program
 {
-    static class Program
+    /// <summary>
+    /// The main entry point for the application.
+    /// </summary>
+    [STAThread]
+    static void Main(string[] args)
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main(string[] args)
+        if (!args.Any())
         {
-            if (!args.Any())
-            {
-                // GUI
-                FreeConsole();
+            // GUI
+            FreeConsole();
 
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new MainForm());
-            }
-            else
-            {
-                // CLI
-                new CLIBatchProcessor().Process(args);
-            }
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new MainForm());
         }
-
-        [DllImport("kernel32.dll")]
-        private static extern bool FreeConsole();
+        else
+        {
+            // CLI
+            new CLIBatchProcessor().Process(args);
+        }
     }
+
+    [DllImport("kernel32.dll")]
+    private static extern bool FreeConsole();
 }

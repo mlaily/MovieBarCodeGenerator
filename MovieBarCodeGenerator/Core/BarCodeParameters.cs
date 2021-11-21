@@ -16,20 +16,15 @@
 //You should have received a copy of the GNU General Public License
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace MovieBarCodeGenerator.Core
+namespace MovieBarCodeGenerator.Core;
+
+public class BarCodeParameters
 {
-    public class BarCodeParameters
-    {
-        public string InputPath { get; set; }
-        public IDictionary<IBarGenerator, string> GeneratorOutputPaths { get; set; }
-        public int Width { get; set; } = 1000;
-        public int? Height { get; set; } = null;
-        public int BarWidth { get; set; } = 1;
-    }
+    public string InputPath { get; set; }
+    public IDictionary<IBarGenerator, string> GeneratorOutputPaths { get; set; }
+    public int Width { get; set; } = 1000;
+    public int? Height { get; set; } = null;
+    public int BarWidth { get; set; } = 1;
 }

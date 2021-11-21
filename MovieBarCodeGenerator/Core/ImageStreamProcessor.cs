@@ -17,87 +17,82 @@
 //along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using PhotoSauce.MagicScaler;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
-namespace MovieBarCodeGenerator.Core
+namespace MovieBarCodeGenerator.Core;
+
+public interface IBarGenerator
 {
-    public interface IBarGenerator
-    {
-        string Name { get; }
-        string DisplayName { get; }
-        string FileNameSuffix { get; }
-        Image GetBar(BitmapStream source, int barWidth, int barHeight);
-    }
+    string Name { get; }
+    string DisplayName { get; }
+    string FileNameSuffix { get; }
+    Image GetBar(BitmapStream source, int barWidth, int barHeight);
+}
 
-    public class ImageStreamProcessor
+public class ImageStreamProcessor
+{
+    public IReadOnlyDictionary<IBarGenerator, Bitmap> CreateBarCodes(
+        BarCodeParameters parameters,
+        FfmpegWrapper ffmpeg,
+        CancellationToken cancellationToken,
+        IProgress<double> progress = null,
+        Action<string> log = null)
     {
-        public IReadOnlyDictionary<IBarGenerator, Bitmap> CreateBarCodes(
-            BarCodeParameters parameters,
-            FfmpegWrapper ffmpeg,
-            CancellationToken cancellationToken,
-            IProgress<double> progress = null,
-            Action<string> log = null)
+        var barCount = (int)Math.Round((double)parameters.Width / parameters.BarWidth);
+        var bitmapStreamSource = ffmpeg.GetImagesFromMedia(parameters.InputPath, barCount, cancellationToken, log);
+
+        var barGenerators = parameters.GeneratorOutputPaths.Keys.ToArray();
+        Bitmap[] finalBitmaps = new Bitmap[barGenerators.Length];
+        Graphics[] finalBitmapGraphics = new Graphics[barGenerators.Length];
+
+        int actualBarHeight = 0;
+
+        int x = 0;
+        foreach (var bitmapStream in bitmapStreamSource)
         {
-            var barCount = (int)Math.Round((double)parameters.Width / parameters.BarWidth);
-            var bitmapStreamSource = ffmpeg.GetImagesFromMedia(parameters.InputPath, barCount, cancellationToken, log);
-
-            var barGenerators = parameters.GeneratorOutputPaths.Keys.ToArray();
-            Bitmap[] finalBitmaps = new Bitmap[barGenerators.Length];
-            Graphics[] finalBitmapGraphics = new Graphics[barGenerators.Length];
-
-            int actualBarHeight = 0;
-
-            int x = 0;
-            foreach (var bitmapStream in bitmapStreamSource)
+            if (x == 0)
             {
-                if (x == 0)
+                var imageInfo = ImageFileInfo.Load(bitmapStream);
+
+                actualBarHeight = parameters.Height ?? imageInfo.Frames.First().Height;
+
+                for (int i = 0; i < barGenerators.Length; i++)
                 {
-                    var imageInfo = ImageFileInfo.Load(bitmapStream);
-
-                    actualBarHeight = parameters.Height ?? imageInfo.Frames.First().Height;
-
-                    for (int i = 0; i < barGenerators.Length; i++)
-                    {
-                        finalBitmaps[i] = new Bitmap(parameters.Width, actualBarHeight);
-                        finalBitmapGraphics[i] = Graphics.FromImage(finalBitmaps[i]);
-                    }
-                }
-
-                using (bitmapStream)
-                {
-                    for (int i = 0; i < barGenerators.Length; i++)
-                    {
-                        bitmapStream.Position = 0;
-                        var bar = barGenerators[i].GetBar(bitmapStream, parameters.BarWidth, actualBarHeight);
-                        var srcRect = new Rectangle(0, 0, bar.Width, bar.Height);
-                        var destRect = new Rectangle(x, 0, parameters.BarWidth, actualBarHeight);
-                        finalBitmapGraphics[i].DrawImage(bar, destRect, srcRect, GraphicsUnit.Pixel);
-                    }
-
-                    x += parameters.BarWidth;
-
-                    progress?.Report((double)x / parameters.Width);
+                    finalBitmaps[i] = new Bitmap(parameters.Width, actualBarHeight);
+                    finalBitmapGraphics[i] = Graphics.FromImage(finalBitmaps[i]);
                 }
             }
 
-            for (int i = 0; i < barGenerators.Length; i++)
+            using (bitmapStream)
             {
-                finalBitmapGraphics[i]?.Dispose();
-            }
+                for (int i = 0; i < barGenerators.Length; i++)
+                {
+                    bitmapStream.Position = 0;
+                    var bar = barGenerators[i].GetBar(bitmapStream, parameters.BarWidth, actualBarHeight);
+                    var srcRect = new Rectangle(0, 0, bar.Width, bar.Height);
+                    var destRect = new Rectangle(x, 0, parameters.BarWidth, actualBarHeight);
+                    finalBitmapGraphics[i].DrawImage(bar, destRect, srcRect, GraphicsUnit.Pixel);
+                }
 
-            var result = new Dictionary<IBarGenerator, Bitmap>();
-            for (int i = 0; i < barGenerators.Length; i++)
-            {
-                result.Add(barGenerators[i], finalBitmaps[i]);
-            }
+                x += parameters.BarWidth;
 
-            return result;
+                progress?.Report((double)x / parameters.Width);
+            }
         }
+
+        for (int i = 0; i < barGenerators.Length; i++)
+        {
+            finalBitmapGraphics[i]?.Dispose();
+        }
+
+        var result = new Dictionary<IBarGenerator, Bitmap>();
+        for (int i = 0; i < barGenerators.Length; i++)
+        {
+            result.Add(barGenerators[i], finalBitmaps[i]);
+        }
+
+        return result;
     }
 }

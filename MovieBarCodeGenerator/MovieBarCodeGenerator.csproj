@@ -9,7 +9,10 @@
     <RootNamespace>MovieBarCodeGenerator</RootNamespace>
     <AssemblyName>MovieBarCodeGenerator</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <LangVersion>10</LangVersion>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
