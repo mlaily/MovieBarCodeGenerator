@@ -118,7 +118,14 @@ This parameter can be set multiple times.",
             foreach (var file in expandedInputFileList)
             {
                 arguments.RawInput = file; // FIXME: copy instead of changing in place...
-                DealWithOneInputFile(arguments);
+                try
+                {
+                    DealWithOneInputFile(arguments);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing file '{file}': {ex}\nSkipping file...");
+                }
             }
         }
         else
