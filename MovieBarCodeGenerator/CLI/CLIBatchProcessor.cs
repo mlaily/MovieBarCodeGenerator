@@ -33,7 +33,7 @@ public class CLIBatchProcessor
     private readonly FfmpegWrapper _ffmpegWrapper = new("ffmpeg.exe");
     private readonly ImageStreamProcessor _imageProcessor = new();
 
-    public void Process(string[] args)
+    public async Task ProcessAsync(string[] args)
     {
         var arguments = new RawArguments();
         var allRawInputs = new List<string>();
@@ -120,7 +120,7 @@ This parameter can be set multiple times.",
                 arguments.RawInput = file; // FIXME: copy instead of changing in place...
                 try
                 {
-                    DealWithOneInputFile(arguments);
+                    await DealWithOneInputFileAsync(arguments);
                 }
                 catch (Exception ex)
                 {
@@ -136,7 +136,7 @@ This parameter can be set multiple times.",
         Console.WriteLine($"Exiting...");
     }
 
-    private void DealWithOneInputFile(RawArguments arguments)
+    private async Task DealWithOneInputFileAsync(RawArguments arguments)
     {
         Console.WriteLine($"Processing file '{arguments.RawInput}':");
 
@@ -189,7 +189,7 @@ This parameter can be set multiple times.",
         }
 
         IReadOnlyDictionary<IBarGenerator, Bitmap> result = null;
-        Task.Run(() =>
+        await Task.Run(() =>
         {
             result = _imageProcessor.CreateBarCodes(
                 parameters,
@@ -197,7 +197,8 @@ This parameter can be set multiple times.",
                 CancellationToken.None,
                 null,
                 x => Console.WriteLine(x));
-        }).Wait(); // Image Magic throws if we are on an STA thread, so we have to execute everything on the thread pool and wait...
+            return result;
+        }); // Image Magic throws if we are on an STA thread, so we have to execute everything on the thread pool and wait...
 
         foreach (var barcode in result)
         {

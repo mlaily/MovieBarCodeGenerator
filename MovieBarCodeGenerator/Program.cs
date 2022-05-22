@@ -1,5 +1,6 @@
-﻿using MovieBarCodeGenerator.CLI;
+using MovieBarCodeGenerator.CLI;
 using MovieBarCodeGenerator.GUI;
+using Nito.AsyncEx;
 using System.Runtime.InteropServices;
 
 namespace MovieBarCodeGenerator;
@@ -9,7 +10,7 @@ static class Program
     /// <summary>
     /// The main entry point for the application.
     /// </summary>
-    [STAThread]
+    [STAThread] // Note: this attribute is ignored on async Main() entry points...
     static void Main(string[] args)
     {
         if (!args.Any())
@@ -24,7 +25,10 @@ static class Program
         else
         {
             // CLI
-            new CLIBatchProcessor().Process(args);
+            AsyncContext.Run(async () =>
+            {
+                await new CLIBatchProcessor().ProcessAsync(args);
+            });
         }
     }
 
