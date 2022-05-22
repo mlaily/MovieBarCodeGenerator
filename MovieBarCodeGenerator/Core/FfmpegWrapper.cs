@@ -1,4 +1,4 @@
-﻿//Copyright 2011-2021 Melvyn Laily
+//Copyright 2011-2021 Melvyn Laily
 //https://zerowidthjoiner.net
 
 //This file is part of MovieBarCodeGenerator.
@@ -105,8 +105,10 @@ public class FfmpegWrapper
                 }
             }
             {
-                // TODO: improve HDR detection with other supported values (see https://github.com/jellyfin/jellyfin/blob/b96dbbf553820861eab9d1a453adcc8ce8a9ef05/MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs#L4186)
-                var match = Regex.Match(output, @"Video: .*?yuv420p10le");
+                // bt2020 seems to be the color primary used by all HDR formats...
+                // (We used to just detect 10bits videos here, but it's not enough. A video can be 10bits and still be bt709 and thus SDR)
+                // TODO: maybe add bt2100 if/when ffmpeg supports it?
+                var match = Regex.Match(output, @"Video: .*?bt2020");
                 result.IsHDR = match.Success;
             }
 
