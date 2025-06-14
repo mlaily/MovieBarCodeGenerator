@@ -13,7 +13,15 @@ static class Program
     [STAThread] // Note: this attribute is ignored on async Main() entry points...
     static void Main(string[] args)
     {
-        if (!args.Any())
+        if (args.Any())
+        {
+            // CLI
+            AsyncContext.Run(async () =>
+            {
+                await new CLIBatchProcessor().ProcessAsync(args);
+            });
+        }
+        else
         {
             // GUI
             FreeConsole();
@@ -21,14 +29,6 @@ static class Program
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
-        }
-        else
-        {
-            // CLI
-            AsyncContext.Run(async () =>
-            {
-                await new CLIBatchProcessor().ProcessAsync(args);
-            });
         }
     }
 
