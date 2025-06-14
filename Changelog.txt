@@ -1,6 +1,12 @@
+Version 2.1, 2025-06-15
+------------------------
+- [added] Limited support for auto conversion of HDR videos to SDR barcodes. (Even though starting from an already SDR video will give better results)
+- [fixed] Skip to next file on error in CLI mode instead of failing the batch.
+- [fixed] Support videos longer than 24h.
+
 Version 2.0, 2021-01-21
 ------------------------
-- [fixed] Fix the application being blurry when the Windows DPI settings are not set at 100%
+- [fixed] Fix the application being blurry when the Windows DPI settings are not set at 100%.
 - [changed] Many bug fixes and internal changes.
 - [changed/fixed] Use MagicScaler as the new default method to scale down bars, since it uses a more correct algorithm and handles gamma-correction properly. ⚠This results in visually different barcodes. (but a "legacy" mode has been added)
 
