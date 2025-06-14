@@ -95,9 +95,10 @@ public class FfmpegWrapper
 
             {
                 var match = Regex.Match(output, @"Duration: (.*?),");
-                if (match.Success)
+                if (match.Success && TryParseHourBasedTimeSpan(match.Groups[1].Value, out var parsedDuration))
                 {
-                    result.Duration = TimeSpan.Parse(match.Groups[1].Value);
+                    TryParseHourBasedTimeSpan("30:22:07.51", out var result2);
+                    result.Duration = parsedDuration;
                 }
                 else
                 {
@@ -114,6 +115,27 @@ public class FfmpegWrapper
 
             return result;
         }
+    }
+
+    /// <summary>
+    /// <see cref="TimeSpan.Parse(string)"/> throws on values with too many hours like `30:22:07.51`,
+    /// so we need to do it ourselves...
+    /// </summary>
+    private bool TryParseHourBasedTimeSpan(string value, out TimeSpan result)
+    {
+        var match = Regex.Match(value, @"(?<hours>\d+):(?<minutes>\d+):(?<seconds>\d+)\.(?<centiseconds>\d+)");
+        if (match.Success
+            && int.TryParse(match.Groups["hours"].Value, out var hours)
+            && int.TryParse(match.Groups["minutes"].Value, out var minutes)
+            && int.TryParse(match.Groups["seconds"].Value, out var seconds)
+            && int.TryParse(match.Groups["centiseconds"].Value, out var centiseconds))
+        {
+            result = new TimeSpan(days: 0, hours: hours, minutes: minutes, seconds: seconds, milliseconds: centiseconds * 10);
+            return true;
+        }
+
+        result = default;
+        return false;
     }
 
     public IEnumerable<BitmapStream> GetImagesFromMedia(string inputPath, int frameCount, CancellationToken cancellationToken, Action<string> log = null, bool autoToneMapHDR = true)
